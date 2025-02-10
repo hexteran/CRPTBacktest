@@ -27,7 +27,7 @@ TEST(OrderExecutionManagerTests, MatchBuyOrdersWithPrice)
     order1->OrderSide = Side::Buy;
     order1->Price = 100.0;
     order1->Qty = 10;
-    order1->Instrument = instrument;
+    order1->Instrument = instrument->InstrumentId;
     
     // Create a buy limit order at 90 (should NOT match when threshold is 95)
     OrderPtr order2 = new Order();
@@ -37,7 +37,7 @@ TEST(OrderExecutionManagerTests, MatchBuyOrdersWithPrice)
     order2->OrderSide = Side::Buy;
     order2->Price = 90.0;
     order2->Qty = 10;
-    order2->Instrument = instrument;
+    order2->Instrument = instrument->InstrumentId;
     
     // Create a buy market order (always matches)
     OrderPtr order3 = new Order();
@@ -47,7 +47,7 @@ TEST(OrderExecutionManagerTests, MatchBuyOrdersWithPrice)
     order3->OrderSide = Side::Buy;
     order3->Price = 0.0; // Price is irrelevant for market orders.
     order3->Qty = 10;
-    order3->Instrument = instrument;
+    order3->Instrument = instrument->InstrumentId;
     
     manager.AddNewOrder(order1);
     manager.AddNewOrder(order2);
@@ -94,7 +94,7 @@ TEST(OrderExecutionManagerTests, MatchSellOrdersWithPrice)
     order1->OrderSide = Side::Sell;
     order1->Price = 100.0;
     order1->Qty = 10;
-    order1->Instrument = instrument;
+    order1->Instrument = instrument->InstrumentId;
     
     // Create a sell limit order at 110 (should NOT match when threshold is 105)
     OrderPtr order2 = new Order();
@@ -104,7 +104,7 @@ TEST(OrderExecutionManagerTests, MatchSellOrdersWithPrice)
     order2->OrderSide = Side::Sell;
     order2->Price = 110.0;
     order2->Qty = 10;
-    order2->Instrument = instrument;
+    order2->Instrument = instrument->InstrumentId;
     
     // Create a sell market order (always matches)
     OrderPtr order3 = new Order();
@@ -114,7 +114,7 @@ TEST(OrderExecutionManagerTests, MatchSellOrdersWithPrice)
     order3->OrderSide = Side::Sell;
     order3->Price = 0.0; // Price is irrelevant.
     order3->Qty = 10;
-    order3->Instrument = instrument;
+    order3->Instrument = instrument->InstrumentId;
     
     manager.AddNewOrder(order1);
     manager.AddNewOrder(order2);
@@ -159,7 +159,7 @@ TEST(OrderExecutionManagerTests, MarketOrdersAlwaysMatch)
     buyMarket->OrderSide = Side::Buy;
     buyMarket->Price = 0.0;
     buyMarket->Qty = 10;
-    buyMarket->Instrument = instrument;
+    buyMarket->Instrument = instrument->InstrumentId;
     
     // Create a sell market order.
     OrderPtr sellMarket = new Order();
@@ -169,7 +169,7 @@ TEST(OrderExecutionManagerTests, MarketOrdersAlwaysMatch)
     sellMarket->OrderSide = Side::Sell;
     sellMarket->Price = 0.0;
     sellMarket->Qty = 10;
-    sellMarket->Instrument = instrument;
+    sellMarket->Instrument = instrument->InstrumentId;
     
     manager.AddNewOrder(buyMarket);
     manager.AddNewOrder(sellMarket);

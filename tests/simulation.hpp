@@ -49,7 +49,10 @@ TEST(SimulationTests, ExecuteOrderTest) {
     g_mdTrades.clear();
 
     // Set up a fake market data manager with two MDTrade events.
-    CSVMarketDataTradesManager marketDataManager({"../../data/simulation_test_trades_0.csv"});
+    CSVMarketDataTradesManager dataCollection({"../../data/simulation_test_trades_0.csv"});
+    auto row = dataCollection.GetTrades();
+    MDRow mdRow(row);
+    MarketDataSimulationManager marketDataManager({MDRow{row}});
 
     // Create a Simulation with execution latency 10 and market data latency 5.
     Simulation<10> sim(marketDataManager, 10, 5,
@@ -95,7 +98,10 @@ TEST(SimulationTests, LimitBuyOrderExecutionTest) {
 
     // Create market data events:
     // First MDTrade event: price 105 (not favorable for a buy order at 100).
-    CSVMarketDataTradesManager marketDataManager({"../../data/simulation_test_trades_3.csv"});
+    CSVMarketDataTradesManager dataCollection({"../../data/simulation_test_trades_3.csv"});
+    auto row = dataCollection.GetTrades();
+    MDRow mdRow(row);
+    MarketDataSimulationManager marketDataManager({MDRow{row}});
     // Create Simulation with executionLatency=10, marketDataLatency=5.
     Simulation<10> sim(marketDataManager, 10, 5,
         ExecutedOrderCallback, CanceledOrderCallback, ReplacedOrderCallback, NewOrderCallback, MDTradeCallback);
@@ -132,7 +138,10 @@ TEST(SimulationTests, LimitSellOrderExecutionTest) {
 
     // Create market data events:
     // First event: price 95 (not favorable for a sell order at 100, since 100 <= 95 is false).
-    CSVMarketDataTradesManager marketDataManager({"../../data/simulation_test_trades_4.csv"});
+    CSVMarketDataTradesManager dataCollection({"../../data/simulation_test_trades_4.csv"});
+    auto row = dataCollection.GetTrades();
+    MDRow mdRow(row);
+    MarketDataSimulationManager marketDataManager({MDRow{row}});
     Simulation<10> sim(marketDataManager, 10, 5,
         ExecutedOrderCallback, CanceledOrderCallback, ReplacedOrderCallback, NewOrderCallback, MDTradeCallback);
 
@@ -163,7 +172,10 @@ TEST(SimulationTests, LimitBuyOrderNotExecutedTest) {
     g_mdTrades.clear();
 
     // Provide a single MDTrade event with a price that does not favor a buy limit order at 100.
-    CSVMarketDataTradesManager marketDataManager({"../../data/simulation_test_trades_4.csv"});
+    CSVMarketDataTradesManager dataCollection({"../../data/simulation_test_trades_4.csv"});
+    auto row = dataCollection.GetTrades();
+    MDRow mdRow(row);
+    MarketDataSimulationManager marketDataManager({MDRow{row}});
 
     Simulation<10> sim(marketDataManager, 10, 5,
         ExecutedOrderCallback, CanceledOrderCallback, ReplacedOrderCallback, NewOrderCallback, MDTradeCallback);
@@ -194,7 +206,10 @@ TEST(SimulationTests, LimitSellOrderNotExecutedTest) {
     g_mdTrades.clear();
 
     // Provide a single MDTrade event with a price that does not favor a sell limit order at 100.
-    CSVMarketDataTradesManager marketDataManager({"../../data/simulation_test_trades_3.csv"});
+    CSVMarketDataTradesManager dataCollection({"../../data/simulation_test_trades_3.csv"});
+    auto row = dataCollection.GetTrades();
+    MDRow mdRow(row);
+    MarketDataSimulationManager marketDataManager({MDRow{row}});
 
     Simulation<10> sim(marketDataManager, 10, 5,
         ExecutedOrderCallback, CanceledOrderCallback, ReplacedOrderCallback, NewOrderCallback, MDTradeCallback);
@@ -224,7 +239,10 @@ TEST(SimulationTests, LimitBuyOrderCancelTest) {
 
     // Create market data events:
     // First MDTrade event: price 105 (not favorable for a buy order at 100).
-    CSVMarketDataTradesManager marketDataManager({"../../data/simulation_test_trades_5.csv"});
+    CSVMarketDataTradesManager dataCollection({"../../data/simulation_test_trades_5.csv"});
+    auto row = dataCollection.GetTrades();
+    MDRow mdRow(row);
+    MarketDataSimulationManager marketDataManager({MDRow{row}});
     // Create Simulation with executionLatency=10, marketDataLatency=5.
 
     Simulation<10> sim(marketDataManager, 10, 5,

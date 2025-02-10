@@ -2,6 +2,7 @@
 #include "circular_buffer.hpp"
 #include "order_execution_manager.hpp"
 #include "simulation.hpp"
+#include "market_data_simulation_manager.hpp"
 int main(int argc, char* argv[])
 {
          ::testing::InitGoogleTest(&argc, argv); 

@@ -12,7 +12,8 @@ enum class MarketDataType
 {
     Trade,
     L1Update,
-    L2Update
+    L2Update,
+    Custom
 };
 
 enum class OrderType
@@ -43,7 +44,7 @@ struct Instrument
     std::string InstrumentId;
     std::string Venue;
 };
-typedef Instrument *InstrumentPtr;
+typedef std::string InstrumentPtr;
 
 struct ExecutionReport
 {
@@ -79,7 +80,6 @@ struct Order
     double LastExecPrice = 0;
     Timestamp CreateTimestamp = 0;
     Timestamp LastReportTimestamp = 0;
-    std::vector<ExecutionReportPtr> Reports;
 
     std::string ToString() const
     {
@@ -87,7 +87,7 @@ struct Order
         oss << "Order { "
             << "Id=" << Id
             << ", ClOrdId=\"" << ClOrdId << "\""
-            << ", Instrument=" << (Instrument ? Instrument->InstrumentId + "@" + Instrument->Venue : "null")
+            << ", Instrument=" << Instrument
             << ", Text=\"" << Text << "\""
             << ", StrategyId=\"" << StrategyId << "\""
             << ", Price=" << Price
@@ -96,7 +96,6 @@ struct Order
             << ", LastExecPrice=" << LastExecPrice
             << ", CreateTimestamp=" << CreateTimestamp
             << ", LastReportTimestamp=" << LastReportTimestamp
-            << ", ReportsCount=" << Reports.size()
             << " }";
         return oss.str();
     }
@@ -107,17 +106,16 @@ typedef Order *OrderPtr;
 struct MarketDataUpdate
 {
     MarketDataType Type;
+    Timestamp EventTimestamp;
 };
 
-typedef std::shared_ptr<MarketDataUpdate> MarketDataUpdatePtr;
+typedef MarketDataUpdate* MarketDataUpdatePtr;
 
 struct MDTrade : public MarketDataUpdate
 {
     double Price;
     double Qty;
     Side AggressorSide;
-    Timestamp TradeTimestamp;
-    Timestamp EventTimestamp;
     Timestamp LocalTimestamp;
     InstrumentPtr Instrument;
 
@@ -136,7 +134,6 @@ struct MDL1Update : public MarketDataUpdate
     double AskQty;
     double BidQty;
     double Qty;
-    Timestamp EventTimestamp;
     Timestamp LocalTimestamp;
     InstrumentPtr Instrument;
 
@@ -158,7 +155,6 @@ struct MDL2Update : public MarketDataUpdate
 {
     std::vector<MDL2Level> Ask;
     std::vector<MDL2Level> Bid;
-    Timestamp EventTimestamp;
     Timestamp LocalTimestamp;
     InstrumentPtr Instrument;
     MDL2Update()
@@ -168,3 +164,15 @@ struct MDL2Update : public MarketDataUpdate
 };
 
 typedef MDL2Update *MDL2UpdatePtr;
+
+
+struct MDCustomUpdate : public MarketDataUpdate
+{
+    double Payload;
+    MDCustomUpdate()
+    {
+        Type = MarketDataType::Custom;
+    }
+};
+
+typedef MDCustomUpdate* MDCustomUpdatePtr;

@@ -29,6 +29,7 @@ public:
             {
                 result.push_back(m_bid.top());
                 m_bid.pop();
+                result.back()->FilledQty = result.back()->Qty;
                 if (result.back()->Type == OrderType::Market)
                     result.back()->LastExecPrice = price;
                 else
@@ -42,6 +43,7 @@ public:
             {
                 result.push_back(m_ask.top());
                 m_ask.pop();
+                result.back()->FilledQty = result.back()->Qty;
                 if (result.back()->Type == OrderType::Market)
                     result.back()->LastExecPrice = price;
                 else
