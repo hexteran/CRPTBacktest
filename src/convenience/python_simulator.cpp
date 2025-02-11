@@ -5,25 +5,6 @@
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
-class PyMarketDataTradesManager: public IMarketDataTradesManager
-{
-public:
-    PyMarketDataTradesManager(const std::vector<MDTrade>& data): 
-        m_data(data)
-    {};
-    std::vector<MDTrade>::iterator begin() final
-    {
-        return m_data.begin();
-    }
-
-    std::vector<MDTrade>::iterator end() final
-    {
-        return m_data.end();
-    }
-private:
-    std::vector<MDTrade> m_data;
-};
-
 class PyStrategy
 {
 public:
@@ -34,7 +15,8 @@ public:
         std::function<void(OrderPtr)> canceled_order_callback,
         std::function<void(OrderPtr)> replaced_order_callback,
         std::function<void(OrderPtr)> new_order_callback,
-        std::function<void(MDTradePtr)> md_trade_callback):
+        std::function<void(MDTradePtr)> md_trade_callback,
+        std::function<void(MDCustomUpdatePtr)> md_custom_update_callback):
         m_simulation(m_marketDataManager, 
             executionLatency, 
             marketDataLatency,
@@ -42,7 +24,8 @@ public:
             canceled_order_callback,
             replaced_order_callback,
             new_order_callback,
-            md_trade_callback)
+            md_trade_callback,
+            md_custom_update_callback)
     {}
 
     void AddMDTrades(const std::unordered_map<std::string, std::vector<MDTrade>>& trades)
@@ -63,7 +46,7 @@ public:
             m_marketDataManager.AddRow(MDRow{data, id});
         for(auto& [id, data]: m_customUpdates)
             m_marketDataManager.AddRow(MDRow{data, id});
-
+        std::cout << "THERE ARE " << m_customUpdates["somedata"].size() << " UPDATES\n\n\n";
         m_simulation.Run();
 
         m_marketDataManager.Clear();
@@ -112,11 +95,6 @@ PYBIND11_MODULE(python_simulator, m) {
         .value("Filled", OrderState::Filled)
         .value("PartiallyFilled", OrderState::PartiallyFilled);
 
-    py::class_<PyMarketDataTradesManager>(m, "PyMarketDataTradesManager")
-        .def(py::init<const std::vector<MDTrade>&>(), 
-             "Create a new PyMarketDataTradesManager from a list of MDTrade objects",
-             py::arg("data"));
-
     py::class_<MDTrade>(m, "MDTrade")
         .def(py::init(), "Constructor for MDTrade")
         .def(py::init<const MDTrade &>())
@@ -129,7 +107,9 @@ PYBIND11_MODULE(python_simulator, m) {
     py::class_<MDCustomUpdate>(m, "MDCustomUpdate")
         .def(py::init(), "Constructor for MDCustomUpdate")
         .def(py::init<const MDCustomUpdate &>())
-        .def_readwrite("EventTimestamp", &MDTrade::EventTimestamp);
+        .def_readwrite("Text", &MDCustomUpdate::Text)
+        .def_readwrite("Payload", &MDCustomUpdate::Payload)
+        .def_readwrite("EventTimestamp", &MDCustomUpdate::EventTimestamp);
 
     py::class_<Order>(m, "Order")
         .def(py::init(), "Constructor for MDTrade")
@@ -159,16 +139,17 @@ PYBIND11_MODULE(python_simulator, m) {
                 std::function<void(OrderPtr)>, // canceled_order_callback
                 std::function<void(OrderPtr)>, // replaced_order_callback
                 std::function<void(OrderPtr)>, // new_order_callback
-                std::function<void(MDTradePtr)>// md_trade_callback
+                std::function<void(MDTradePtr)>,// md_trade_callback
+                std::function<void(MDCustomUpdatePtr)>
             >(),
-            py::arg("data"),
             py::arg("executionLatency"),
             py::arg("marketDataLatency"),
             py::arg("executed_order_callback"),
             py::arg("canceled_order_callback"),
             py::arg("replaced_order_callback"),
             py::arg("new_order_callback"),
-            py::arg("md_trade_callback")
+            py::arg("md_trade_callback"),
+            py::arg("md_custom_update_callback")
         )
         .def("run", &PyStrategy::Run, "Run simulation")
         .def("send_order", &PyStrategy::SendOrder, "Send an order to the simulation")

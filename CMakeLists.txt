@@ -39,4 +39,4 @@ set_property(TARGET Tests PROPERTY CXX_STANDARD 20)
 #target_link_libraries(main PUBLIC gtest)
 #set_property(TARGET main PROPERTY CXX_STANDARD 20)
 
-#pybind11_add_module(python_simulator src/convenience/python_simulator.cpp)
+pybind11_add_module(python_simulator src/convenience/python_simulator.cpp)

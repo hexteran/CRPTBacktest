@@ -168,6 +168,7 @@ typedef MDL2Update *MDL2UpdatePtr;
 
 struct MDCustomUpdate : public MarketDataUpdate
 {
+    std::string Text;
     double Payload;
     MDCustomUpdate()
     {

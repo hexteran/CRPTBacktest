@@ -6,21 +6,23 @@ template <int QueueSize>
 class Simulation
 {
 public:
-    Simulation(MarketDataSimulationManager& marketDataManager,
+    Simulation(MarketDataSimulationManager &marketDataManager,
                Timestamp executionLatency,
                Timestamp marketDataLatency,
                std::function<void(OrderPtr)> executed_order_callback,
                std::function<void(OrderPtr)> canceled_order_callback,
                std::function<void(OrderPtr)> replaced_order_callback,
                std::function<void(OrderPtr)> new_order_callback,
-               std::function<void(MDTradePtr)> md_trade_callback) : m_marketDataManager(marketDataManager),
-                                                                    m_executionLatency(executionLatency),
-                                                                    m_marketDataLatency(marketDataLatency),
-                                                                    m_canceled_order_callback(canceled_order_callback),
-                                                                    m_replaced_order_callback(replaced_order_callback),
-                                                                    m_executed_order_callback(executed_order_callback),
-                                                                    m_new_order_callback(new_order_callback),
-                                                                    m_md_trade_callback(md_trade_callback)
+               std::function<void(MDTradePtr)> md_trade_callback,
+               std::function<void(MDCustomUpdatePtr)> md_custom_update_callback) : m_marketDataManager(marketDataManager),
+                                                                                   m_executionLatency(executionLatency),
+                                                                                   m_marketDataLatency(marketDataLatency),
+                                                                                   m_canceled_order_callback(canceled_order_callback),
+                                                                                   m_replaced_order_callback(replaced_order_callback),
+                                                                                   m_executed_order_callback(executed_order_callback),
+                                                                                   m_new_order_callback(new_order_callback),
+                                                                                   m_md_trade_callback(md_trade_callback),
+                                                                                   m_md_custom_update_callback(md_custom_update_callback)
     {
     }
 
@@ -68,11 +70,16 @@ private:
     {
         m_output_md_trades_queue.PushBack(trade);
         trade->LocalTimestamp = trade->EventTimestamp + m_marketDataLatency;
-        auto result = m_order_exection_manager.MatchWithPrice(trade->Price, trade->AggressorSide);
+        auto result = m_order_exection_manager[trade->Instrument].MatchWithPrice(trade->Price, trade->AggressorSide);
 
         for (auto &order : result)
             if (order->State != OrderState::PendingCancel && order->State != OrderState::Canceled)
                 m_output_executed_orders_queue.PushBack(order);
+    }
+
+    void processMDUpdate(MDCustomUpdatePtr update)
+    {
+        m_output_md_custom_updates_queue.PushBack(update);
     }
 
     void processMDTypeSpecificInfo(MarketDataUpdatePtr update)
@@ -86,7 +93,8 @@ private:
             }
             case MarketDataType::Custom:
             {
-                break;
+                processMDUpdate(MDCustomUpdatePtr(update));
+                return;
             }
         }
     }
@@ -97,7 +105,7 @@ private:
                update->EventTimestamp >= m_input_order_queue.Front()->CreateTimestamp + m_executionLatency)
         {
             auto &order = m_input_order_queue.Front();
-            m_order_exection_manager.AddNewOrder(order);
+            m_order_exection_manager[order->Instrument].AddNewOrder(order);
             m_output_new_orders_queue.PushBack(order);
             m_input_order_queue.PopFront();
         }
@@ -111,7 +119,7 @@ private:
                 m_input_replaced_orders_queue.PopFront();
                 continue;
             }
-            m_order_exection_manager.ReplaceOrder(std::get<0>(record), std::get<1>(record), std::get<2>(record));
+            m_order_exection_manager[std::get<0>(record)->Instrument].ReplaceOrder(std::get<0>(record), std::get<1>(record), std::get<2>(record));
             m_output_replaced_orders_queue.PushBack(std::make_tuple(std::get<0>(record), std::get<3>(record)));
             m_input_replaced_orders_queue.PopFront();
         }
@@ -170,6 +178,13 @@ private:
             m_md_trade_callback(m_output_md_trades_queue.Front());
             m_output_md_trades_queue.PopFront();
         }
+
+        while (!m_output_md_custom_updates_queue.Empty() &&
+               update->EventTimestamp >= m_output_md_custom_updates_queue.Front()->EventTimestamp + m_marketDataLatency)
+        {
+            m_md_custom_update_callback(m_output_md_custom_updates_queue.Front());
+            m_output_md_custom_updates_queue.PopFront();
+        }
     }
 
 private:
@@ -181,12 +196,14 @@ private:
     CircularBuffer<OrderPtr, QueueSize> m_output_canceled_orders_queue;
     CircularBuffer<std::tuple<OrderPtr, Timestamp>, QueueSize> m_output_replaced_orders_queue;
     CircularBuffer<MDTradePtr, QueueSize> m_output_md_trades_queue;
-    OrderExecutionManager m_order_exection_manager;
+    CircularBuffer<MDCustomUpdatePtr, QueueSize> m_output_md_custom_updates_queue;
+    std::unordered_map<std::string, OrderExecutionManager> m_order_exection_manager;
     std::function<void(OrderPtr)> m_executed_order_callback;
     std::function<void(OrderPtr)> m_canceled_order_callback;
     std::function<void(OrderPtr)> m_replaced_order_callback;
     std::function<void(OrderPtr)> m_new_order_callback;
     std::function<void(MDTradePtr)> m_md_trade_callback;
+    std::function<void(MDCustomUpdatePtr)> m_md_custom_update_callback;
     Timedelta m_executionLatency{0}, m_marketDataLatency{0};
     Timestamp m_currentTimestamp{0}, m_nextTimestamp{0};
 };

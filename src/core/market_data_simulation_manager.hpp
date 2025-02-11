@@ -235,6 +235,7 @@ private:
             update.Price = std::stod(line[1]);
             update.Qty = std::stod(line[2]);
             update.AggressorSide = Helpers::ToLower(line[3]) == "buy" ? Side::Buy : Side::Sell;
+            update.Instrument = line[4];
             _data.push_back(update);
         }
     }
@@ -247,7 +248,6 @@ private:
     }
 
 private:
-    //std::vector<MDTrade> _data;
     int _cursor{0};
     int _size{0};
 };

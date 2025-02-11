@@ -62,17 +62,17 @@ public:
         return true;
     }
 
-    T& Front()
+    inline T& Front()
     {
         return m_buffer[m_begin];
     }
 
-    T& Back()
+    inline T& Back()
     {
         return m_buffer[m_end];
     }
 
-    bool Empty()
+    bool Empty() const
     {
         return m_size == 0;
     }
