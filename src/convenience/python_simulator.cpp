@@ -100,6 +100,7 @@ PYBIND11_MODULE(python_simulator, m) {
         .def(py::init<const MDTrade &>())
         .def_readwrite("AggressorSide", &MDTrade::AggressorSide)
         .def_readwrite("EventTimestamp", &MDTrade::EventTimestamp)
+        .def_readwrite("LocalTimestamp", &MDTrade::LocalTimestamp)
         .def_readwrite("Instrument", &MDTrade::Instrument)
         .def_readwrite("Price", &MDTrade::Price)
         .def_readwrite("Qty", &MDTrade::Qty);

@@ -34,7 +34,7 @@ public:
 
     void OnCancelOrder(OrderPtr order)
     {
-        m_output_canceled_orders_queue.PushBack(order);
+        m_input_order_cancel_queue.PushBack(order);
     }
 
     void OnOrderReplace(OrderPtr order, double price, double qty)
@@ -110,6 +110,16 @@ private:
             m_input_order_queue.PopFront();
         }
 
+        while (!m_input_order_cancel_queue.Empty() &&
+               update->EventTimestamp >= m_input_order_cancel_queue.Front()->CreateTimestamp + m_executionLatency)
+        {
+            auto &order = m_input_order_cancel_queue.Front();
+            if(order->State != OrderState::Filled)
+                m_order_exection_manager[order->Instrument].CancelOrder(order);
+            m_output_canceled_orders_queue.PushBack(order);
+            m_input_order_cancel_queue.PopFront();
+        }
+
         while (!m_input_replaced_orders_queue.Empty() &&
                update->EventTimestamp >= std::get<3>(m_input_replaced_orders_queue.Front()) + m_executionLatency)
         {
@@ -141,9 +151,12 @@ private:
                update->EventTimestamp >= m_output_canceled_orders_queue.Front()->CreateTimestamp + 2 * m_executionLatency)
         {
             auto &order = m_output_canceled_orders_queue.Front();
-            order->LastReportTimestamp = m_currentTimestamp;
-            order->State = OrderState::Canceled;
-            m_canceled_order_callback(order);
+            if(order->State != OrderState::Filled)
+            {
+                order->LastReportTimestamp = m_currentTimestamp;
+                order->State = OrderState::Canceled;
+                m_canceled_order_callback(order);
+            }
             m_output_canceled_orders_queue.PopFront();
         }
 
@@ -190,6 +203,7 @@ private:
 private:
     MarketDataSimulationManager &m_marketDataManager;
     CircularBuffer<OrderPtr, QueueSize> m_input_order_queue;
+    CircularBuffer<OrderPtr, QueueSize> m_input_order_cancel_queue;
     CircularBuffer<std::tuple<OrderPtr, double, double, Timestamp>, QueueSize> m_input_replaced_orders_queue;
     CircularBuffer<OrderPtr, QueueSize> m_output_new_orders_queue;
     CircularBuffer<OrderPtr, QueueSize> m_output_executed_orders_queue;

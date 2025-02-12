@@ -54,7 +54,7 @@ class Strategy:
     def OnCustomUpdate(self, custom_update):
         pass
         
-    def SendOrder(self, instrument: str, price: float, qty: float, order_side: Side, order_type: OrderType):
+    def SendOrder(self, instrument: str, price: float, qty: float, order_side: Side, order_type: OrderType, text = ""):
         # Create a new Order instance.
         new_order = Order()
         new_order.Instrument = instrument
@@ -62,6 +62,7 @@ class Strategy:
         new_order.Qty = qty
         new_order.OrderSide = order_side
         new_order.Type = order_type
+        new_order.Text = text
 
         # Save the order in our list.
         self.orders.append(new_order)
@@ -83,11 +84,19 @@ class Strategy:
                                'filled_qty': order.FilledQty,
                                'create_timestamp': order.CreateTimestamp,
                                'last_report_timestamp': order.LastReportTimestamp,
-                               'side': 'BUY' if order.OrderSide == Side.Buy else 'SELL'})
+                               'side': 'BUY' if order.OrderSide == Side.Buy else 'SELL',
+                               'type': 'Limit' if Order.Type == OrderType.Limit else 'Market',
+                               'text': str(Order.Text)})
         return result
     
     def Run(self):
         self.py_strategy.run()
+    
+def ns_to_datetime(ns):
+    # Convert nanoseconds to seconds (as float)
+    seconds = ns / 1e9
+    # fromtimestamp creates a datetime in the local timezone
+    return datetime.datetime.fromtimestamp(seconds)
     
 def test_market_order_buy():
     import pandas as pd

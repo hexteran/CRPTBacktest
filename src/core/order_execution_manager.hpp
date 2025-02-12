@@ -85,6 +85,40 @@ public:
         }
     }
 
+    void CancelOrder(OrderPtr order)
+    {
+        if (order->OrderSide == Side::Buy)
+        {
+            std::vector<OrderPtr> buffer;
+            while(!m_bid.empty())
+            {
+                if (m_bid.top() != order)
+                    buffer.push_back(m_bid.top());
+                m_bid.pop();
+            }
+            while(!buffer.empty())
+            {
+                m_bid.push(buffer.back());
+                buffer.pop_back();
+            }
+        }
+        else
+        {
+            std::vector<OrderPtr> buffer;
+            while(!m_ask.empty())
+            {
+                if (m_bid.top() != order)
+                    buffer.push_back(m_ask.top());
+                m_ask.pop();
+            }
+            while(!buffer.empty())
+            {
+                m_ask.push(buffer.back());
+                buffer.pop_back();
+            }
+        }
+    }
+
 private:
     struct AskComparator
     {
