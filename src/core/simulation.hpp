@@ -14,27 +14,34 @@ public:
                std::function<void(OrderPtr)> replaced_order_callback,
                std::function<void(OrderPtr)> new_order_callback,
                std::function<void(MDTradePtr)> md_trade_callback,
-               std::function<void(MDCustomUpdatePtr)> md_custom_update_callback) : m_marketDataManager(marketDataManager),
-                                                                                   m_executionLatency(executionLatency),
-                                                                                   m_marketDataLatency(marketDataLatency),
-                                                                                   m_canceled_order_callback(canceled_order_callback),
-                                                                                   m_replaced_order_callback(replaced_order_callback),
-                                                                                   m_executed_order_callback(executed_order_callback),
-                                                                                   m_new_order_callback(new_order_callback),
-                                                                                   m_md_trade_callback(md_trade_callback),
-                                                                                   m_md_custom_update_callback(md_custom_update_callback)
+               std::function<void(MDCustomUpdatePtr)> md_custom_update_callback,
+               std::function<void(MDCustomMultipleUpdatePtr)> md_custom_multiple_update_callback = std::function<void(MDCustomMultipleUpdatePtr)>()) : m_marketDataManager(marketDataManager),
+                                                                                                                                               m_executionLatency(executionLatency),
+                                                                                                                                               m_marketDataLatency(marketDataLatency),
+                                                                                                                                               m_canceled_order_callback(canceled_order_callback),
+                                                                                                                                               m_replaced_order_callback(replaced_order_callback),
+                                                                                                                                               m_executed_order_callback(executed_order_callback),
+                                                                                                                                               m_new_order_callback(new_order_callback),
+                                                                                                                                               m_md_trade_callback(md_trade_callback),
+                                                                                                                                               m_md_custom_update_callback(md_custom_update_callback),
+                                                                                                                                               m_md_custom_multiple_update_callback(md_custom_multiple_update_callback)
     {
     }
 
     void OnNewOrder(OrderPtr order)
     {
+        order->State = OrderState::PendingNew;
         order->CreateTimestamp = m_currentTimestamp;
         m_input_order_queue.PushBack(order);
     }
 
     void OnCancelOrder(OrderPtr order)
     {
-        m_input_order_cancel_queue.PushBack(order);
+        if(order->State != OrderState::Filled && order->State != OrderState::Canceled)
+        {
+            order->State = OrderState::PendingCancel;
+            m_input_order_cancel_queue.PushBack(order);
+        }
     }
 
     void OnOrderReplace(OrderPtr order, double price, double qty)
@@ -82,6 +89,11 @@ private:
         m_output_md_custom_updates_queue.PushBack(update);
     }
 
+    void processMDUpdate(MDCustomMultipleUpdatePtr update)
+    {
+        m_output_md_custom_multiple_updates_queue.PushBack(update);
+    }
+
     void processMDTypeSpecificInfo(MarketDataUpdatePtr update)
     {
         switch (update->Type)
@@ -94,6 +106,11 @@ private:
             case MarketDataType::Custom:
             {
                 processMDUpdate(MDCustomUpdatePtr(update));
+                return;
+            }
+            case MarketDataType::CustomMultiple:
+            {
+                processMDUpdate(MDCustomMultipleUpdatePtr(update));
                 return;
             }
         }
@@ -115,7 +132,9 @@ private:
         {
             auto &order = m_input_order_cancel_queue.Front();
             if(order->State != OrderState::Filled)
+            {
                 m_order_exection_manager[order->Instrument].CancelOrder(order);
+            }
             m_output_canceled_orders_queue.PushBack(order);
             m_input_order_cancel_queue.PopFront();
         }
@@ -198,6 +217,13 @@ private:
             m_md_custom_update_callback(m_output_md_custom_updates_queue.Front());
             m_output_md_custom_updates_queue.PopFront();
         }
+
+        while (!m_output_md_custom_multiple_updates_queue.Empty() &&
+               update->EventTimestamp >= m_output_md_custom_multiple_updates_queue.Front()->EventTimestamp + m_marketDataLatency)
+        {
+            m_md_custom_multiple_update_callback(m_output_md_custom_multiple_updates_queue.Front());
+            m_output_md_custom_multiple_updates_queue.PopFront();
+        }
     }
 
 private:
@@ -211,13 +237,18 @@ private:
     CircularBuffer<std::tuple<OrderPtr, Timestamp>, QueueSize> m_output_replaced_orders_queue;
     CircularBuffer<MDTradePtr, QueueSize> m_output_md_trades_queue;
     CircularBuffer<MDCustomUpdatePtr, QueueSize> m_output_md_custom_updates_queue;
+    CircularBuffer<MDCustomMultipleUpdatePtr, QueueSize> m_output_md_custom_multiple_updates_queue;
+
     std::unordered_map<std::string, OrderExecutionManager> m_order_exection_manager;
+
     std::function<void(OrderPtr)> m_executed_order_callback;
     std::function<void(OrderPtr)> m_canceled_order_callback;
     std::function<void(OrderPtr)> m_replaced_order_callback;
     std::function<void(OrderPtr)> m_new_order_callback;
     std::function<void(MDTradePtr)> m_md_trade_callback;
     std::function<void(MDCustomUpdatePtr)> m_md_custom_update_callback;
+    std::function<void(MDCustomMultipleUpdatePtr)> m_md_custom_multiple_update_callback;
+
     Timedelta m_executionLatency{0}, m_marketDataLatency{0};
     Timestamp m_currentTimestamp{0}, m_nextTimestamp{0};
 };

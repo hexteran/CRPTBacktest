@@ -10,6 +10,7 @@ static std::vector<OrderPtr> g_replacedOrders;
 static std::vector<OrderPtr> g_newOrders;
 static std::vector<MDTradePtr> g_mdTrades;
 static std::vector<MDCustomUpdatePtr> g_mdCustomUpdate;
+static std::vector<MDCustomMultipleUpdatePtr> g_mdCustomMultipleUpdate;
 
 void ExecutedOrderCallback(OrderPtr order) {
     g_executedOrders.push_back(order);
@@ -33,6 +34,10 @@ void MDTradeCallback(MDTradePtr trade) {
 
 void MDCustomUpdateCallback(MDCustomUpdatePtr update) {
     g_mdCustomUpdate.push_back(update);
+}
+
+void MDCustomMultipleUpdateCallback(MDCustomMultipleUpdatePtr update) {
+    g_mdCustomMultipleUpdate.push_back(update);
 }
 
 // Test that a new order is processed and eventually executed when market data arrives.
@@ -394,4 +399,51 @@ TEST(SimulationTests, MDCustomUpdatesForwardingTest) {
     sim.Run();
 
     EXPECT_EQ(g_mdCustomUpdate.size(), 10);
+}
+
+TEST(SimulationTests, MDCustomMultipleUpdatesForwardingTest) {
+    // Reset global recording vectors.
+    g_executedOrders.clear();
+    g_canceledOrders.clear();
+    g_newOrders.clear();
+    g_mdTrades.clear();
+    g_mdCustomUpdate.clear();
+    g_mdCustomMultipleUpdate.clear();
+
+    std::vector<MDCustomMultipleUpdate> updates1(5, MDCustomMultipleUpdate());
+    std::vector<MDCustomMultipleUpdate> updates2(5, MDCustomMultipleUpdate());
+    for (int i = 0; i < updates1.size(); ++i)
+    {
+        updates1[i].EventTimestamp = i*3;
+        updates1[i].Payload["open"] = i*3;
+        updates1[i].Payload["close"] = i*3 + 1;
+    }
+
+    for (int i = 0; i < updates2.size(); ++i)
+    {
+        updates2[i].EventTimestamp = i * 3 + 1;
+        updates2[i].Payload["open"] = i*3 + 1;
+        updates2[i].Payload["close"] = i*3 + 2;
+    }
+
+    MarketDataSimulationManager marketDataManager({MDRow{updates1}, MDRow{updates2}});
+
+    Simulation<10> sim(marketDataManager, 0, 0,
+                       ExecutedOrderCallback,
+                       CanceledOrderCallback,
+                       ReplacedOrderCallback,
+                       NewOrderCallback,
+                       MDTradeCallback,
+                       MDCustomUpdateCallback,
+                       MDCustomMultipleUpdateCallback);
+
+    sim.Run();
+
+    EXPECT_EQ(g_mdCustomMultipleUpdate.size(), 10);
+
+    for(auto& update: g_mdCustomMultipleUpdate)
+    {
+        EXPECT_EQ(update->Payload["open"], update->EventTimestamp);
+        EXPECT_EQ(update->Payload["close"], update->EventTimestamp + 1);
+    };
 }

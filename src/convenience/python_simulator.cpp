@@ -16,7 +16,8 @@ public:
         std::function<void(OrderPtr)> replaced_order_callback,
         std::function<void(OrderPtr)> new_order_callback,
         std::function<void(MDTradePtr)> md_trade_callback,
-        std::function<void(MDCustomUpdatePtr)> md_custom_update_callback):
+        std::function<void(MDCustomUpdatePtr)> md_custom_update_callback,
+        std::function<void(MDCustomMultipleUpdatePtr)> md_custom_multiple_update_callback):
         m_simulation(m_marketDataManager, 
             executionLatency, 
             marketDataLatency,
@@ -25,7 +26,8 @@ public:
             replaced_order_callback,
             new_order_callback,
             md_trade_callback,
-            md_custom_update_callback)
+            md_custom_update_callback,
+            md_custom_multiple_update_callback)
     {}
 
     void AddMDTrades(const std::unordered_map<std::string, std::vector<MDTrade>>& trades)
@@ -40,13 +42,20 @@ public:
             m_customUpdates[id] = data;
     }
 
+    void AddMDCustomMultipleUpdates(const std::unordered_map<std::string, std::vector<MDCustomMultipleUpdate>>& updates)
+    {
+        for(auto& [id, data]: updates)
+            m_customMultipleUpdates[id] = data;
+    }
+
     void Run()
     {
         for(auto& [id, data]: m_trades)
             m_marketDataManager.AddRow(MDRow{data, id});
         for(auto& [id, data]: m_customUpdates)
             m_marketDataManager.AddRow(MDRow{data, id});
-        std::cout << "THERE ARE " << m_customUpdates["somedata"].size() << " UPDATES\n\n\n";
+        for(auto& [id, data]: m_customMultipleUpdates)
+            m_marketDataManager.AddRow(MDRow{data, id});
         m_simulation.Run();
 
         m_marketDataManager.Clear();
@@ -65,6 +74,7 @@ public:
 private:
     std::unordered_map<std::string, std::vector<MDTrade>> m_trades;
     std::unordered_map<std::string, std::vector<MDCustomUpdate>> m_customUpdates;
+    std::unordered_map<std::string, std::vector<MDCustomMultipleUpdate>> m_customMultipleUpdates;
     MarketDataSimulationManager m_marketDataManager;
     Simulation<10000> m_simulation;
 };
@@ -112,6 +122,13 @@ PYBIND11_MODULE(python_simulator, m) {
         .def_readwrite("Payload", &MDCustomUpdate::Payload)
         .def_readwrite("EventTimestamp", &MDCustomUpdate::EventTimestamp);
 
+    py::class_<MDCustomMultipleUpdate>(m, "MDCustomMultipleUpdate")
+        .def(py::init(), "Constructor for MDCustomMultipleUpdate")
+        .def(py::init<const MDCustomMultipleUpdate &>())
+        .def_readwrite("Text", &MDCustomMultipleUpdate::Text)
+        .def_readwrite("Payload", &MDCustomMultipleUpdate::Payload)
+        .def_readwrite("EventTimestamp", &MDCustomMultipleUpdate::EventTimestamp);
+
     py::class_<Order>(m, "Order")
         .def(py::init(), "Constructor for MDTrade")
         .def_readwrite("AggressorSide", &Order::Id)
@@ -141,7 +158,8 @@ PYBIND11_MODULE(python_simulator, m) {
                 std::function<void(OrderPtr)>, // replaced_order_callback
                 std::function<void(OrderPtr)>, // new_order_callback
                 std::function<void(MDTradePtr)>,// md_trade_callback
-                std::function<void(MDCustomUpdatePtr)>
+                std::function<void(MDCustomUpdatePtr)>,
+                std::function<void(MDCustomMultipleUpdatePtr)>
             >(),
             py::arg("executionLatency"),
             py::arg("marketDataLatency"),
@@ -150,11 +168,13 @@ PYBIND11_MODULE(python_simulator, m) {
             py::arg("replaced_order_callback"),
             py::arg("new_order_callback"),
             py::arg("md_trade_callback"),
-            py::arg("md_custom_update_callback")
+            py::arg("md_custom_update_callback"),
+            py::arg("md_custom_multiple_update_callback")
         )
         .def("run", &PyStrategy::Run, "Run simulation")
         .def("send_order", &PyStrategy::SendOrder, "Send an order to the simulation")
         .def("cancel_order", &PyStrategy::CancelOrder, "Cancel an order in the simulation")
         .def("add_md_trades", &PyStrategy::AddMDTrades, "Add dict of md trades")
-        .def("add_md_custom_updates", &PyStrategy::AddMDCustomUpdates, "Add dict of md custom updates");
+        .def("add_md_custom_updates", &PyStrategy::AddMDCustomUpdates, "Add dict of md custom updates")
+        .def("add_md_custom_multiple_updates", &PyStrategy::AddMDCustomMultipleUpdates, "Add dict of md custom multiple updates");
 }

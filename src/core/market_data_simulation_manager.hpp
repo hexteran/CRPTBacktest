@@ -42,6 +42,14 @@ public:
     {
     }
 
+    MDRow(const std::vector<MDCustomMultipleUpdate>& row, const std::string& rowName = ""):
+        m_typeSize(sizeof(MDCustomMultipleUpdate)), 
+        m_row{BufferPtr(row.data())},
+        m_rowSize(row.size()),
+        m_rowName(rowName)
+    {
+    }
+
     MarketDataUpdatePtr operator[](size_t n) const
     {
         if (n < m_rowSize)

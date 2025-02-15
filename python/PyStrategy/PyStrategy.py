@@ -23,7 +23,8 @@ class Strategy:
             self.OnOrderModified,
             self.OnNewOrder,
             self.OnTrade,
-            self.OnCustomUpdate
+            self.OnCustomUpdate,
+            self.OnCustomMultipleUpdate
         )
         self.sent = False
         
@@ -35,6 +36,9 @@ class Strategy:
         
     def AddMDCustomUpdates (self, md_custom_updates: dict):
         self.py_strategy.add_md_custom_updates(md_custom_updates)
+    
+    def AddMDCustomMultipleUpdates (self, md_custom_multiple_updates: dict):
+        self.py_strategy.add_md_custom_multiple_updates(md_custom_multiple_updates)
         
     def OnOrderFilled(self, order):
         pass
@@ -53,7 +57,11 @@ class Strategy:
     
     def OnCustomUpdate(self, custom_update):
         pass
+    
+    def OnCustomMultipleUpdate(self, custom_multiple_update):
+        pass
         
+
     def SendOrder(self, instrument: str, price: float, qty: float, order_side: Side, order_type: OrderType, text = ""):
         # Create a new Order instance.
         new_order = Order()
@@ -81,12 +89,29 @@ class Strategy:
                                'nominal_price': order.Price, 
                                'exec_price': order.LastExecPrice,
                                'qty': order.Qty,
+                               'state': order.State,
                                'filled_qty': order.FilledQty,
                                'create_timestamp': order.CreateTimestamp,
                                'last_report_timestamp': order.LastReportTimestamp,
                                'side': 'BUY' if order.OrderSide == Side.Buy else 'SELL',
-                               'type': 'Limit' if Order.Type == OrderType.Limit else 'Market',
-                               'text': str(Order.Text)})
+                               'type': 'Limit' if order.Type == OrderType.Limit else 'Market',
+                               'text': order.Text})
+        return result
+
+    def GetOrders(self):
+        result = []
+        for order in self.orders:
+            result.append({'instrument': order.Instrument,
+                            'nominal_price': order.Price, 
+                            'exec_price': order.LastExecPrice,
+                            'state': order.State,
+                            'qty': order.Qty,
+                            'filled_qty': order.FilledQty,
+                            'create_timestamp': order.CreateTimestamp,
+                            'last_report_timestamp': order.LastReportTimestamp,
+                            'side': 'BUY' if order.OrderSide == Side.Buy else 'SELL',
+                            'type': 'Limit' if order.Type == OrderType.Limit else 'Market',
+                            'text': order.Text})
         return result
     
     def Run(self):
@@ -97,104 +122,7 @@ def ns_to_datetime(ns):
     seconds = ns / 1e9
     # fromtimestamp creates a datetime in the local timezone
     return datetime.datetime.fromtimestamp(seconds)
-    
-def test_market_order_buy():
-    import pandas as pd
-    class LocalStrategy(Strategy):
-        def OnOrderFilled(self, order):
-            print('filled')
-        
-        def OnOrderCanceled(self, order):
-            pass
-        
-        def OnOrderModified(self, order):
-            pass
-        
-        def OnNewOrder(self, order):
-            pass
-        
-        def OnCustomUpdate(self, custom_update):
-            pass
-        
-        def OnTrade(self, trade):
-            print(trade.Instrument)
-            if (self.sent == False):
-                self.sent = True
-                self.SendOrder('TestInstrument', 0, 1, Side.Buy, OrderType.Market)
-
-    test = pd.read_csv("//home//hexteran//git//CRPTBacktest//data//simulation_test_trades_5.csv", header = None)
-    data = []
-
-    test = test.to_dict(orient = 'list')
-    #print(test)
-    for i in range(len(test[0])):
-        trade = MDTrade()
-        trade.EventTimestamp = test[0][i]
-        trade.Price = test[1][i]
-        trade.Qty = test[2][i]
-        trade.AggressorSide = Side.Buy if test[3][i].lower() == 'buy' else Side.Sell
-        trade.Instrument = test[4][i]
-        data.append(trade)
-
-    strat = LocalStrategy(data, 0, 0)
-    strat.Run()
-
-    print(strat.GetFilledOrders())
-    
-def test_market_order_sell():
-    import pandas as pd
-    class LocalStrategy(Strategy):
-        def OnOrderFilled(self, order):
-            print('filled')
-        
-        def OnOrderCanceled(self, order):
-            pass
-        
-        def OnOrderModified(self, order):
-            pass
-        
-        def OnNewOrder(self, order):
-            print('new')
-            
-        def OnCustomUpdate(self, custom_update):
-            print(custom_update.Payload)
-        
-        def OnTrade(self, trade):
-            print(trade.Instrument)
-            if (self.sent == False):
-                self.sent = True
-                self.SendOrder('TestInstrument', 0, 1, Side.Sell, OrderType.Market)
-
-    test = pd.read_csv("//home//hexteran//git//CRPTBacktest//data//simulation_test_trades_5.csv", header = None)
-    data = []
-
-    test = test.to_dict(orient = 'list')
-    #print(test)
-    for i in range(len(test[0])):
-        trade = MDTrade()
-        trade.EventTimestamp = test[0][i]
-        trade.Price = test[1][i]
-        trade.Qty = test[2][i]
-        trade.AggressorSide = Side.Buy if test[3][i].lower() == 'buy' else Side.Sell
-        trade.Instrument = test[4][i]
-        data.append(trade)
-    
-    strat = LocalStrategy(0, 0)
-    strat.AddMDTrades({'USDTBTSD':data})
-    
-    updates = []
-    for i in range(10):
-        update = MDCustomUpdate()  
-        update.Text = "blah"
-        update.Payload = i
-        update.EventTimestamp = 35
-        updates.append(update)
-    
-    strat.AddMDCustomUpdates({'somedata':updates})
-    strat.Run()
-
-    print(strat.GetFilledOrders())
-    
+  
 #test_market_order_sell()
 
         

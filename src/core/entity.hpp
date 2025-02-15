@@ -13,7 +13,8 @@ enum class MarketDataType
     Trade,
     L1Update,
     L2Update,
-    Custom
+    Custom,
+    CustomMultiple
 };
 
 enum class OrderType
@@ -177,3 +178,15 @@ struct MDCustomUpdate : public MarketDataUpdate
 };
 
 typedef MDCustomUpdate* MDCustomUpdatePtr;
+
+struct MDCustomMultipleUpdate : public MarketDataUpdate
+{
+    std::string Text;
+    std::unordered_map<std::string, double> Payload;
+    MDCustomMultipleUpdate()
+    {
+        Type = MarketDataType::CustomMultiple;
+    }
+};
+
+typedef MDCustomMultipleUpdate* MDCustomMultipleUpdatePtr;
