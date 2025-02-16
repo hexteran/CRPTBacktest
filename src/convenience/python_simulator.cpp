@@ -5,9 +5,78 @@
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
+class PyDataStorage
+{
+public:
+    void AddMDTrades(const std::unordered_map<std::string, std::vector<MDTrade>>& trades)
+    {
+        for(auto& [id, data]: trades)
+            m_trades[id] = data;
+    }
+
+    void AddMDCustomUpdates(const std::unordered_map<std::string, std::vector<MDCustomUpdate>>& updates)
+    {
+        for(auto& [id, data]: updates)
+            m_customUpdates[id] = data;
+    }
+
+    void AddMDCustomMultipleUpdates(const std::unordered_map<std::string, std::vector<MDCustomMultipleUpdate>>& updates)
+    {
+        for(auto& [id, data]: updates)
+        {
+            m_customMultipleUpdates[id] = data;
+        }
+    }
+
+    std::unordered_map<std::string, std::vector<MDTrade>>& GetMDTrades()
+    {
+        return m_trades;
+    }
+
+    std::unordered_map<std::string, std::vector<MDCustomUpdate>>& GetMDCustomUpdates()
+    {
+        return m_customUpdates;
+    }
+
+    std::unordered_map<std::string, std::vector<MDCustomMultipleUpdate>>& GetMDCustomMultipleUpdates()
+    {
+        return m_customMultipleUpdates;
+    }
+
+private:
+    std::unordered_map<std::string, std::vector<MDTrade>> m_trades;
+    std::unordered_map<std::string, std::vector<MDCustomUpdate>> m_customUpdates;
+    std::unordered_map<std::string, std::vector<MDCustomMultipleUpdate>> m_customMultipleUpdates;
+};
+
 class PyStrategy
 {
 public:
+    PyStrategy(
+        PyDataStorage& storage,
+        Timestamp executionLatency, 
+        Timestamp marketDataLatency,
+        std::function<void(OrderPtr)> executed_order_callback,
+        std::function<void(OrderPtr)> canceled_order_callback,
+        std::function<void(OrderPtr)> replaced_order_callback,
+        std::function<void(OrderPtr)> new_order_callback,
+        std::function<void(MDTradePtr)> md_trade_callback,
+        std::function<void(MDCustomUpdatePtr)> md_custom_update_callback,
+        std::function<void(MDCustomMultipleUpdatePtr)> md_custom_multiple_update_callback):
+        m_simulation(m_marketDataManager, 
+            executionLatency, 
+            marketDataLatency,
+            executed_order_callback,
+            canceled_order_callback,
+            replaced_order_callback,
+            new_order_callback,
+            md_trade_callback,
+            md_custom_update_callback,
+            md_custom_multiple_update_callback),
+        m_storage(storage),
+        m_destroyStorage(false)
+    {}
+
     PyStrategy(
         Timestamp executionLatency, 
         Timestamp marketDataLatency,
@@ -27,37 +96,30 @@ public:
             new_order_callback,
             md_trade_callback,
             md_custom_update_callback,
-            md_custom_multiple_update_callback)
+            md_custom_multiple_update_callback),
+        m_storage(*(new PyDataStorage())),
+        m_destroyStorage(true)
     {}
-
-    void AddMDTrades(const std::unordered_map<std::string, std::vector<MDTrade>>& trades)
+    
+    //void AddMDTrades(const std::unordered_map<std::string, std::vector<>>& trades)
+    void CommitData()
     {
-        for(auto& [id, data]: trades)
-            m_trades[id] = data;
-    }
-
-    void AddMDCustomUpdates(const std::unordered_map<std::string, std::vector<MDCustomUpdate>>& updates)
-    {
-        for(auto& [id, data]: updates)
-            m_customUpdates[id] = data;
-    }
-
-    void AddMDCustomMultipleUpdates(const std::unordered_map<std::string, std::vector<MDCustomMultipleUpdate>>& updates)
-    {
-        for(auto& [id, data]: updates)
-            m_customMultipleUpdates[id] = data;
+        ClearDataManager();
+        for(auto& [id, data]: m_storage.GetMDTrades())
+            m_marketDataManager.AddRow(MDRow{data, id});
+        for(auto& [id, data]: m_storage.GetMDCustomUpdates())
+            m_marketDataManager.AddRow(MDRow{data, id});
+        for(auto& [id, data]: m_storage.GetMDCustomMultipleUpdates())
+            m_marketDataManager.AddRow(MDRow{data, id});
     }
 
     void Run()
     {
-        for(auto& [id, data]: m_trades)
-            m_marketDataManager.AddRow(MDRow{data, id});
-        for(auto& [id, data]: m_customUpdates)
-            m_marketDataManager.AddRow(MDRow{data, id});
-        for(auto& [id, data]: m_customMultipleUpdates)
-            m_marketDataManager.AddRow(MDRow{data, id});
         m_simulation.Run();
+    }
 
+    void ClearDataManager()
+    {
         m_marketDataManager.Clear();
     }
 
@@ -71,10 +133,30 @@ public:
         m_simulation.OnCancelOrder(order);
     }
 
+    void AddMDTrades(const std::unordered_map<std::string, std::vector<MDTrade>>& trades)
+    {
+        m_storage.AddMDTrades(trades);
+    }
+
+    void AddMDCustomUpdates(const std::unordered_map<std::string, std::vector<MDCustomUpdate>>& updates)
+    {
+        m_storage.AddMDCustomUpdates(updates);
+    }
+
+    void AddMDCustomMultipleUpdates(const std::unordered_map<std::string, std::vector<MDCustomMultipleUpdate>>& updates)
+    {
+        m_storage.AddMDCustomMultipleUpdates(updates);
+    }
+
+    ~PyStrategy()
+    {
+        if (m_destroyStorage)
+            delete &m_storage;
+    }
+
 private:
-    std::unordered_map<std::string, std::vector<MDTrade>> m_trades;
-    std::unordered_map<std::string, std::vector<MDCustomUpdate>> m_customUpdates;
-    std::unordered_map<std::string, std::vector<MDCustomMultipleUpdate>> m_customMultipleUpdates;
+    PyDataStorage& m_storage;
+    bool m_destroyStorage{false};
     MarketDataSimulationManager m_marketDataManager;
     Simulation<10000> m_simulation;
 };
@@ -149,7 +231,36 @@ PYBIND11_MODULE(python_simulator, m) {
         .def_readwrite("LastReportTimestamp", &Order::LastReportTimestamp)
         .def("to_string", &Order::ToString, "Return the order details as a string");
 
+    py::class_<PyDataStorage>(m, "PyDataStorage")
+        .def(py::init<>())
+        .def("add_md_trades", &PyDataStorage::AddMDTrades, "Add dict of md trades")
+        .def("add_md_custom_updates", &PyDataStorage::AddMDCustomUpdates, "Add dict of md custom updates")
+        .def("add_md_custom_multiple_updates", &PyDataStorage::AddMDCustomMultipleUpdates, "Add dict of md custom multiple updates");
+        
     py::class_<PyStrategy>(m, "PyStrategy")
+        .def(py::init<
+                PyDataStorage&,
+                Timestamp,                     // executionLatency
+                Timestamp,                     // marketDataLatency
+                std::function<void(OrderPtr)>, // executed_order_callback
+                std::function<void(OrderPtr)>, // canceled_order_callback
+                std::function<void(OrderPtr)>, // replaced_order_callback
+                std::function<void(OrderPtr)>, // new_order_callback
+                std::function<void(MDTradePtr)>,// md_trade_callback
+                std::function<void(MDCustomUpdatePtr)>,
+                std::function<void(MDCustomMultipleUpdatePtr)>
+            >(),
+            py::arg("dataStorage"),
+            py::arg("executionLatency"),
+            py::arg("marketDataLatency"),
+            py::arg("executed_order_callback"),
+            py::arg("canceled_order_callback"),
+            py::arg("replaced_order_callback"),
+            py::arg("new_order_callback"),
+            py::arg("md_trade_callback"),
+            py::arg("md_custom_update_callback"),
+            py::arg("md_custom_multiple_update_callback"))
+
         .def(py::init<
                 Timestamp,                     // executionLatency
                 Timestamp,                     // marketDataLatency
@@ -176,5 +287,7 @@ PYBIND11_MODULE(python_simulator, m) {
         .def("cancel_order", &PyStrategy::CancelOrder, "Cancel an order in the simulation")
         .def("add_md_trades", &PyStrategy::AddMDTrades, "Add dict of md trades")
         .def("add_md_custom_updates", &PyStrategy::AddMDCustomUpdates, "Add dict of md custom updates")
-        .def("add_md_custom_multiple_updates", &PyStrategy::AddMDCustomMultipleUpdates, "Add dict of md custom multiple updates");
+        .def("add_md_custom_multiple_updates", &PyStrategy::AddMDCustomMultipleUpdates, "Add dict of md custom multiple updates")
+        .def("commit_data", &PyStrategy::CommitData, "Commits data to a market data manager")
+        .def("clear_data_manager", &PyStrategy::ClearDataManager, "Clears market data from manager");
 }

@@ -12,22 +12,49 @@ if lib_dir not in os.environ.get('LD_LIBRARY_PATH', ''):
 import datetime
 from python_simulator import *
 
+class DataStorage:
+    def __init__(self):
+        self.storage = PyDataStorage()
+
+    def AddMDTrades(self, trades: dict):
+        self.storage.add_md_trades(trades)
+
+    def AddMDCustomUpdates(self, custom_updates: dict):
+        self.storage.add_md_custom_updates(custom_updates)
+
+    def AddMDCustomMultipleUpdates(self, custom_multiple_updates: dict):
+        self.storage.add_md_custom_multiple_updates(custom_multiple_updates)
+
 class Strategy:
-    def __init__(self, execution_latency: int, market_data_latency: int):
-        # Create an instance of PyStrategy with the provided market data, latency values, and callbacks.
-        self.py_strategy = PyStrategy(
-            execution_latency,
-            market_data_latency,
-            self.OnOrderFilled,
-            self.OnOrderCanceled,
-            self.OnOrderModified,
-            self.OnNewOrder,
-            self.OnTrade,
-            self.OnCustomUpdate,
-            self.OnCustomMultipleUpdate
-        )
-        self.sent = False
-        
+    def __init__(self, execution_latency: int, market_data_latency: int, dataStorage = None):
+        if dataStorage is None:
+            # Create an instance of PyStrategy with the provided market data, latency values, and callbacks.
+            self.py_strategy = PyStrategy(
+                execution_latency,
+                market_data_latency,
+                self.OnOrderFilled,
+                self.OnOrderCanceled,
+                self.OnOrderModified,
+                self.OnNewOrder,
+                self.OnTrade,
+                self.OnCustomUpdate,
+                self.OnCustomMultipleUpdate
+            )  
+
+        else:
+            self.py_strategy = PyStrategy(
+                dataStorage.storage,
+                execution_latency,
+                market_data_latency,
+                self.OnOrderFilled,
+                self.OnOrderCanceled,
+                self.OnOrderModified,
+                self.OnNewOrder,
+                self.OnTrade,
+                self.OnCustomUpdate,
+                self.OnCustomMultipleUpdate
+            )  
+              
         # A list to store orders created by the strategy.
         self.orders = []
     
@@ -116,6 +143,9 @@ class Strategy:
     
     def Run(self):
         self.py_strategy.run()
+
+    def CommitData(self):
+        self.py_strategy.commit_data()
     
 def ns_to_datetime(ns):
     # Convert nanoseconds to seconds (as float)
