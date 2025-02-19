@@ -37,6 +37,7 @@ class Strategy:
                 self.OnOrderModified,
                 self.OnNewOrder,
                 self.OnTrade,
+                self.OnL1Update,
                 self.OnCustomUpdate,
                 self.OnCustomMultipleUpdate
             )  
@@ -82,6 +83,9 @@ class Strategy:
     def OnTrade(self, trade):
         pass
     
+    def OnL1Update(self, update):
+        pass
+
     def OnCustomUpdate(self, custom_update):
         pass
     

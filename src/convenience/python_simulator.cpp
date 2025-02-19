@@ -61,9 +61,10 @@ public:
         std::function<void(OrderPtr)> replaced_order_callback,
         std::function<void(OrderPtr)> new_order_callback,
         std::function<void(MDTradePtr)> md_trade_callback,
+        std::function<void(MDL1UpdatePtr)> md_l1_update_callback,
         std::function<void(MDCustomUpdatePtr)> md_custom_update_callback,
         std::function<void(MDCustomMultipleUpdatePtr)> md_custom_multiple_update_callback):
-        m_simulation(m_marketDataManager, 
+        m_simulation(m_marketDataManager,
             executionLatency, 
             marketDataLatency,
             executed_order_callback,
@@ -71,6 +72,7 @@ public:
             replaced_order_callback,
             new_order_callback,
             md_trade_callback,
+            md_l1_update_callback,
             md_custom_update_callback,
             md_custom_multiple_update_callback),
         m_storage(storage),
@@ -85,9 +87,10 @@ public:
         std::function<void(OrderPtr)> replaced_order_callback,
         std::function<void(OrderPtr)> new_order_callback,
         std::function<void(MDTradePtr)> md_trade_callback,
+        std::function<void(MDL1UpdatePtr)> md_l1_update_callback,
         std::function<void(MDCustomUpdatePtr)> md_custom_update_callback,
         std::function<void(MDCustomMultipleUpdatePtr)> md_custom_multiple_update_callback):
-        m_simulation(m_marketDataManager, 
+        m_simulation(m_marketDataManager,
             executionLatency, 
             marketDataLatency,
             executed_order_callback,
@@ -95,6 +98,7 @@ public:
             replaced_order_callback,
             new_order_callback,
             md_trade_callback,
+            md_l1_update_callback,
             md_custom_update_callback,
             md_custom_multiple_update_callback),
         m_storage(*(new PyDataStorage())),
@@ -197,6 +201,17 @@ PYBIND11_MODULE(python_simulator, m) {
         .def_readwrite("Price", &MDTrade::Price)
         .def_readwrite("Qty", &MDTrade::Qty);
 
+    py::class_<MDL1Update>(m, "MDL1Update")
+        .def(py::init(), "Constructor for MDL1Update")
+        .def(py::init<const MDL1Update &>())
+        .def_readwrite("AskPrice", &MDL1Update::AskPrice)
+        .def_readwrite("AskQty", &MDL1Update::AskQty)
+        .def_readwrite("BidPrice", &MDL1Update::BidPrice)
+        .def_readwrite("BidQty", &MDL1Update::BidQty)
+        .def_readwrite("EventTimestamp", &MDL1Update::EventTimestamp)
+        .def_readwrite("LocalTimestamp", &MDL1Update::LocalTimestamp)
+        .def_readwrite("Instrument", &MDL1Update::Instrument);
+
     py::class_<MDCustomUpdate>(m, "MDCustomUpdate")
         .def(py::init(), "Constructor for MDCustomUpdate")
         .def(py::init<const MDCustomUpdate &>())
@@ -247,6 +262,7 @@ PYBIND11_MODULE(python_simulator, m) {
                 std::function<void(OrderPtr)>, // replaced_order_callback
                 std::function<void(OrderPtr)>, // new_order_callback
                 std::function<void(MDTradePtr)>,// md_trade_callback
+                std::function<void(MDL1UpdatePtr)>,
                 std::function<void(MDCustomUpdatePtr)>,
                 std::function<void(MDCustomMultipleUpdatePtr)>
             >(),
@@ -258,6 +274,7 @@ PYBIND11_MODULE(python_simulator, m) {
             py::arg("replaced_order_callback"),
             py::arg("new_order_callback"),
             py::arg("md_trade_callback"),
+            py::arg("md_l1_update_callback"),
             py::arg("md_custom_update_callback"),
             py::arg("md_custom_multiple_update_callback"))
 
@@ -269,6 +286,7 @@ PYBIND11_MODULE(python_simulator, m) {
                 std::function<void(OrderPtr)>, // replaced_order_callback
                 std::function<void(OrderPtr)>, // new_order_callback
                 std::function<void(MDTradePtr)>,// md_trade_callback
+                std::function<void(MDL1UpdatePtr)>,
                 std::function<void(MDCustomUpdatePtr)>,
                 std::function<void(MDCustomMultipleUpdatePtr)>
             >(),
@@ -279,6 +297,7 @@ PYBIND11_MODULE(python_simulator, m) {
             py::arg("replaced_order_callback"),
             py::arg("new_order_callback"),
             py::arg("md_trade_callback"),
+            py::arg("md_l1_update_callback"),
             py::arg("md_custom_update_callback"),
             py::arg("md_custom_multiple_update_callback")
         )

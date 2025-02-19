@@ -13,6 +13,7 @@ public:
                      [this](OrderPtr order) { this->OnOrderReplaced(order); },
                      [this](OrderPtr order) { this->OnNewOrder(order); },
                      [this](MDTradePtr trade) { this->OnMDTrade(trade); },
+                     [this](MDL1UpdatePtr trade) { this->OnL1Update(trade); },
                      [this](MDCustomUpdatePtr update) { this->OnMDCustomUpdate(update); },
                      [this](MDCustomMultipleUpdatePtr update) { this->OnMDCustomMultipleUpdate(update); }
                      )
@@ -29,6 +30,8 @@ public:
     void OnNewOrder(OrderPtr order){}
 
     void OnMDCustomUpdate(MDCustomUpdatePtr update){}
+
+    void OnL1Update(MDL1UpdatePtr update){}
 
     void OnOrderFilled(OrderPtr order)
     {

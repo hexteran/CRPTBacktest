@@ -34,6 +34,14 @@ public:
     {
     }
 
+    MDRow(const std::vector<MDL1Update>& row, const std::string& rowName = ""):
+        m_typeSize(sizeof(MDL1Update)), 
+        m_row{BufferPtr(row.data())},
+        m_rowSize(row.size()),
+        m_rowName(rowName)
+    {
+    }
+
     MDRow(const std::vector<MDCustomUpdate>& row, const std::string& rowName = ""):
         m_typeSize(sizeof(MDCustomUpdate)), 
         m_row{BufferPtr(row.data())},

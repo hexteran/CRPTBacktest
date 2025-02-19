@@ -9,9 +9,9 @@ public:
     {
         if (order->Type == OrderType::Limit)
         {
-            if (order->OrderSide == Side::Buy && m_lastSellMarketPrice < order->Price ||
-                order->OrderSide == Side::Sell && m_lastBuyMarketPrice > order->Price)
-                order->Type == OrderType::Market;
+            if ((order->OrderSide == Side::Buy && m_lastSellMarketPrice < order->Price) ||
+                (order->OrderSide == Side::Sell && m_lastBuyMarketPrice > order->Price))
+                order->Type = OrderType::Market;
         }
         order->OrderSide == Side::Buy ? m_bid.push(order): m_ask.push(order);
         if (order->Type == OrderType::Market)

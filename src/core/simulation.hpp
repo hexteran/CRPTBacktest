@@ -1,7 +1,6 @@
 #include "market_data_simulation_manager.hpp"
 #include "order_execution_manager.hpp"
 #include "../utils/circular_buffer.hpp"
-
 template <int QueueSize>
 class Simulation
 {
@@ -14,7 +13,8 @@ public:
                std::function<void(OrderPtr)> replaced_order_callback,
                std::function<void(OrderPtr)> new_order_callback,
                std::function<void(MDTradePtr)> md_trade_callback,
-               std::function<void(MDCustomUpdatePtr)> md_custom_update_callback,
+               std::function<void(MDL1UpdatePtr)> md_l1_callback,
+               std::function<void(MDCustomUpdatePtr)> md_custom_update_callback = std::function<void(MDCustomUpdatePtr)>(),
                std::function<void(MDCustomMultipleUpdatePtr)> md_custom_multiple_update_callback = std::function<void(MDCustomMultipleUpdatePtr)>()) : m_marketDataManager(marketDataManager),
                                                                                                                                                m_executionLatency(executionLatency),
                                                                                                                                                m_marketDataLatency(marketDataLatency),
@@ -23,6 +23,7 @@ public:
                                                                                                                                                m_executed_order_callback(executed_order_callback),
                                                                                                                                                m_new_order_callback(new_order_callback),
                                                                                                                                                m_md_trade_callback(md_trade_callback),
+                                                                                                                                               m_md_l1_callback(md_l1_callback),
                                                                                                                                                m_md_custom_update_callback(md_custom_update_callback),
                                                                                                                                                m_md_custom_multiple_update_callback(md_custom_multiple_update_callback)
     {
@@ -84,6 +85,22 @@ private:
                 m_output_executed_orders_queue.PushBack(order);
     }
 
+    void processMDUpdate(MDL1UpdatePtr update)
+    {
+        m_output_md_l1_updates_queue.PushBack(update);
+        update->LocalTimestamp = update->EventTimestamp + m_marketDataLatency;
+        auto resultBuy = m_order_exection_manager[update->Instrument].MatchWithPrice(update->AskPrice, Side::Sell);
+
+        for (auto &order : resultBuy)
+            if (order->State != OrderState::PendingCancel && order->State != OrderState::Canceled)
+                m_output_executed_orders_queue.PushBack(order);
+
+        auto resultSell = m_order_exection_manager[update->Instrument].MatchWithPrice(update->BidPrice, Side::Buy);
+        for (auto &order : resultSell)
+            if (order->State != OrderState::PendingCancel && order->State != OrderState::Canceled)
+                m_output_executed_orders_queue.PushBack(order);
+    }
+
     void processMDUpdate(MDCustomUpdatePtr update)
     {
         m_output_md_custom_updates_queue.PushBack(update);
@@ -101,6 +118,11 @@ private:
             case MarketDataType::Trade:
             {
                 processMDUpdate(MDTradePtr(update));
+                return;
+            }
+            case MarketDataType::L1Update:
+            {
+                processMDUpdate(MDL1UpdatePtr(update));
                 return;
             }
             case MarketDataType::Custom:
@@ -211,6 +233,13 @@ private:
             m_output_md_trades_queue.PopFront();
         }
 
+        while (!m_output_md_l1_updates_queue.Empty() &&
+               update->EventTimestamp >= m_output_md_l1_updates_queue.Front()->LocalTimestamp)
+        {
+            m_md_l1_callback(m_output_md_l1_updates_queue.Front());
+            m_output_md_l1_updates_queue.PopFront();
+        }
+
         while (!m_output_md_custom_updates_queue.Empty() &&
                update->EventTimestamp >= m_output_md_custom_updates_queue.Front()->EventTimestamp + m_marketDataLatency)
         {
@@ -238,6 +267,7 @@ private:
     CircularBuffer<MDTradePtr, QueueSize> m_output_md_trades_queue;
     CircularBuffer<MDCustomUpdatePtr, QueueSize> m_output_md_custom_updates_queue;
     CircularBuffer<MDCustomMultipleUpdatePtr, QueueSize> m_output_md_custom_multiple_updates_queue;
+    CircularBuffer<MDL1UpdatePtr, QueueSize> m_output_md_l1_updates_queue;
 
     std::unordered_map<std::string, OrderExecutionManager> m_order_exection_manager;
 
@@ -246,6 +276,7 @@ private:
     std::function<void(OrderPtr)> m_replaced_order_callback;
     std::function<void(OrderPtr)> m_new_order_callback;
     std::function<void(MDTradePtr)> m_md_trade_callback;
+    std::function<void(MDL1UpdatePtr)> m_md_l1_callback;
     std::function<void(MDCustomUpdatePtr)> m_md_custom_update_callback;
     std::function<void(MDCustomMultipleUpdatePtr)> m_md_custom_multiple_update_callback;
 
