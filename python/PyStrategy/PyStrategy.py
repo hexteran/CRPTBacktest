@@ -16,8 +16,44 @@ class DataStorage:
     def __init__(self):
         self.storage = PyDataStorage()
 
-    def AddMDTrades(self, trades: dict):
-        self.storage.add_md_trades(trades)
+    def AddVMDTrades(self, rowName: str,
+        timestamps: list[int],
+        prices:list[float],
+        qtys: list[float],
+        sides: list[Side],
+        instruments: list[str]):
+        assert(len(timestamps) == len(prices) == len(qtys) == len(sides) == len(instruments))
+        self.storage.add_v_md_trades(rowName, timestamps, prices, qtys, sides, instruments)
+
+    def AddVMDL1Updates(self, rowName: str,
+        timestamps: list[int],
+        askPrices:list[float],
+        askQtys: list[float],
+        bidPrices:list[float],
+        bidQtys: list[float],
+        instruments: list[str]):
+        assert(len(timestamps) == len(askPrices) == len(askQtys) == len(bidPrices) == len(bidQtys))
+        self.storage.add_v_md_l1_updates(rowName, timestamps, askPrices, askQtys, bidPrices, bidQtys, instruments)
+
+    def AddVMDCustomUpdates(self, rowName: str,
+        timestamps: list[int],
+        texts:list[str],
+        payloads: list[float]):
+        assert(len(timestamps) == len(texts) == len(payloads))
+        self.storage.add_v_md_custom_updates(rowName, timestamps, texts, payloads)
+
+    def AddVMDCustomMultipleUpdates(self, rowName: str,
+        timestamps: list[int],
+        texts:list[str],
+        payloads: list[dict]):
+        assert(len(timestamps) == len(texts) == len(payloads))
+        self.storage.add_v_md_custom_multiple_updates(rowName, timestamps, texts, payloads)
+
+    def AddMDTrades(self, md_trades: dict):
+        self.py_strategy.add_md_trades(md_trades)
+
+    def AddL1Updates(self, md_updates: dict):
+        self.py_strategy.add_md_l1_updates(md_updates)
 
     def AddMDCustomUpdates(self, custom_updates: dict):
         self.storage.add_md_custom_updates(custom_updates)
@@ -52,6 +88,7 @@ class Strategy:
                 self.OnOrderModified,
                 self.OnNewOrder,
                 self.OnTrade,
+                self.OnL1Update,
                 self.OnCustomUpdate,
                 self.OnCustomMultipleUpdate
             )  
