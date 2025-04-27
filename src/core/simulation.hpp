@@ -135,6 +135,10 @@ private:
                 processMDUpdate(MDCustomMultipleUpdatePtr(update));
                 return;
             }
+            default:
+            {
+                throw std::runtime_error("Data type is not supported");
+            }
         }
     }
 

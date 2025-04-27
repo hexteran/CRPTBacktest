@@ -1,7 +1,7 @@
-#include "convenience/simulation.hpp"
+//include "convenience/simulation.hpp"
 
 int main()
 {
-    StrategySimulation.Run();
+  //  StrategySimulation.Run();
     return 0;
 }

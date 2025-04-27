@@ -4,9 +4,9 @@
 
 constexpr double MAXPRICE = std::numeric_limits<double>::max();
 
-typedef u_int64_t OrderId;
-typedef u_int64_t Timestamp;
-typedef u_int64_t Timedelta;
+using OrderId = uint64_t;
+using Timestamp = uint64_t;
+using Timedelta = uint64_t;
 
 enum class MarketDataType
 {
@@ -45,7 +45,8 @@ struct Instrument
     std::string InstrumentId;
     std::string Venue;
 };
-typedef std::string InstrumentPtr;
+
+using InstrumentPtr = std::string;
 
 struct ExecutionReport
 {
@@ -63,7 +64,7 @@ struct ExecutionReport
     Timestamp LocalTimestamp = 0;
 };
 
-typedef ExecutionReport *ExecutionReportPtr;
+using ExecutionReportPtr = ExecutionReport*;
 
 struct Order
 {
@@ -102,7 +103,7 @@ struct Order
     }
 };
 
-typedef Order *OrderPtr;
+using OrderPtr = Order*;
 
 struct MarketDataUpdate
 {
@@ -126,7 +127,7 @@ struct MDTrade : public MarketDataUpdate
     }
 };
 
-typedef MDTrade *MDTradePtr;
+using MDTradePtr = MDTrade*;
 
 struct MDL1Update : public MarketDataUpdate
 {
@@ -144,7 +145,7 @@ struct MDL1Update : public MarketDataUpdate
     }
 };
 
-typedef MDL1Update *MDL1UpdatePtr;
+using MDL1UpdatePtr = MDL1Update*;
 
 struct MDL2Level
 {
@@ -164,8 +165,7 @@ struct MDL2Update : public MarketDataUpdate
     }
 };
 
-typedef MDL2Update *MDL2UpdatePtr;
-
+using MDL2UpdatePtr = MDL2Update*;
 
 struct MDCustomUpdate : public MarketDataUpdate
 {
@@ -177,7 +177,7 @@ struct MDCustomUpdate : public MarketDataUpdate
     }
 };
 
-typedef MDCustomUpdate* MDCustomUpdatePtr;
+using MDCustomUpdatePtr = MDCustomUpdate*;
 
 struct MDCustomMultipleUpdate : public MarketDataUpdate
 {
@@ -189,4 +189,4 @@ struct MDCustomMultipleUpdate : public MarketDataUpdate
     }
 };
 
-typedef MDCustomMultipleUpdate* MDCustomMultipleUpdatePtr;
+using MDCustomMultipleUpdatePtr = MDCustomMultipleUpdate*;

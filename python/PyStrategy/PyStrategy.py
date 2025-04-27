@@ -50,10 +50,10 @@ class DataStorage:
         self.storage.add_v_md_custom_multiple_updates(rowName, timestamps, texts, payloads)
 
     def AddMDTrades(self, md_trades: dict):
-        self.py_strategy.add_md_trades(md_trades)
+        self.storage.add_md_trades(md_trades)
 
     def AddL1Updates(self, md_updates: dict):
-        self.py_strategy.add_md_l1_updates(md_updates)
+        self.storage.add_md_l1_updates(md_updates)
 
     def AddMDCustomUpdates(self, custom_updates: dict):
         self.storage.add_md_custom_updates(custom_updates)

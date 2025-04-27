@@ -18,10 +18,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(pybind11)
 
+FetchContent_Declare(
+  clickhouse
+  GIT_REPOSITORY https://github.com/ClickHouse/clickhouse-cpp.git
+  GIT_SHALLOW TRUE)
+
+FetchContent_MakeAvailable(clickhouse)
 
 find_package(GTest REQUIRED)
 add_executable(Tests tests/tests.cpp)
-target_link_libraries(Tests PUBLIC gtest)
+target_link_libraries(Tests PUBLIC gtest clickhouse-cpp-lib)
 set_property(TARGET Tests PROPERTY CXX_STANDARD 20)
 
 #find_library(PAPI_LIBRARY NAMES papi)

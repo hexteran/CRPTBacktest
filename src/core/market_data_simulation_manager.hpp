@@ -78,7 +78,6 @@ private:
     std::string m_rowName;
 };
 
-
 class MarketDataSimulationManager
 {
 public:
