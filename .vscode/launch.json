@@ -7,7 +7,7 @@
         "name": "Launch – GDB",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/build/bin/Tests",
+        "program": "${workspaceFolder}/build/bin/PnDQuoter",
         "cwd": "${workspaceFolder}",
         "args": [],
         "stopAtEntry": false,

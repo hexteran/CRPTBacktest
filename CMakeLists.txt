@@ -25,6 +25,10 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(clickhouse)
 
+add_executable(PnDQuoter src/examples/pnd_quoter.cpp)
+target_link_libraries(PnDQuoter PUBLIC gtest clickhouse-cpp-lib)
+set_property(TARGET PnDQuoter PROPERTY CXX_STANDARD 20)
+
 find_package(GTest REQUIRED)
 add_executable(Tests tests/tests.cpp)
 target_link_libraries(Tests PUBLIC gtest clickhouse-cpp-lib)
@@ -34,5 +38,7 @@ set_property(TARGET Tests PROPERTY CXX_STANDARD 20)
 #add_executable(market_making src/examples/market_making.cpp)
 #target_link_libraries(market_making PUBLIC papi)
 #set_property(TARGET market_making PROPERTY CXX_STANDARD 20)
+
+
 
 pybind11_add_module(python_simulator src/convenience/python_simulator.cpp)

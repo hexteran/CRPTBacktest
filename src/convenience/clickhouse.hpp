@@ -1,4 +1,6 @@
-#include "../core/entity.hpp"
+#pragma once
+
+#include "../core/market_data_simulation_manager.hpp"
 
 #include <clickhouse/client.h>
 
