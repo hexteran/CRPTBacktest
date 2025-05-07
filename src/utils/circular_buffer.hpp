@@ -1,11 +1,30 @@
 #pragma once
 
+#include "../definitions.h"
+
 #include <iostream>
 
-template<class T, int n>
+constexpr uint64_t CT_MAX_BUFFER_SIZE = 10000;
+
+template<class T, uint64_t n>
 class CircularBuffer
 {
+    using BufferType = std::conditional_t<(n > CT_MAX_BUFFER_SIZE),
+                                          std::vector<T>,
+                                          std::array<T, n>>;
+
 public:
+    CircularBuffer(CircularBuffer&&) = delete;
+    CircularBuffer(const CircularBuffer&) = delete;
+
+    CircularBuffer()
+    {
+        if constexpr (n > CT_MAX_BUFFER_SIZE) 
+        {
+            m_buffer.resize(n);
+        }
+    }
+
     bool PushBack(const T& element)
     {
         if (m_size >= n)
@@ -77,7 +96,7 @@ public:
         return m_size == 0;
     }
 private:
-    std::array<T, n> m_buffer;
+    BufferType m_buffer;
     int m_begin{0}, m_end{-1};
     int m_size{0};
 };

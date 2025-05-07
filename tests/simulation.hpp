@@ -45,9 +45,7 @@ void MDCustomMultipleUpdateCallback(MDCustomMultipleUpdatePtr update) {
     g_mdCustomMultipleUpdate.push_back(update);
 }
 
-// Test that a new order is processed and eventually executed when market data arrives.
 TEST(SimulationTests, ExecuteOrderTest) {
-    // Reset global recording vectors.
     g_executedOrders.clear();
     g_canceledOrders.clear();
     g_newOrders.clear();
@@ -70,7 +68,6 @@ TEST(SimulationTests, ExecuteOrderTest) {
         MDL1UpdateCallback,
         MDCustomUpdateCallback);
 
-    // Create a buy limit order (price 105; should match when market trade price is 100).
     OrderPtr order = new Order();
     order->Id = 1;
     order->OrderSide = Side::Buy;
@@ -89,33 +86,24 @@ TEST(SimulationTests, ExecuteOrderTest) {
     EXPECT_EQ(g_executedOrders[0]->Id, 1);
     EXPECT_EQ(g_executedOrders[0]->State, OrderState::Filled);
 
-    // Verify that the MDTrade callback was invoked (the first trade’s local time is reached later).
     ASSERT_EQ(g_mdTrades.size(), 1u);
-    // (For example, the first trade’s LocalTimestamp equals 25+5 = 30,
-    // and is processed when the simulation’s current timestamp is 35.)
     EXPECT_GE(g_mdTrades[0]->LocalTimestamp, 30);
 
     // Clean up.
     delete order;
 }
 
-// Test that a buy limit order is executed only when a later MDTrade event
-// has a price low enough (i.e. order->Price >= mdTrade Price).
 TEST(SimulationTests, LimitBuyOrderExecutionTest) {
-    // Clear previous callback records.
     g_executedOrders.clear();
     g_canceledOrders.clear();
     g_newOrders.clear();
     g_mdTrades.clear();
     g_mdL1Updates.clear();
 
-    // Create market data events:
-    // First MDTrade event: price 105 (not favorable for a buy order at 100).
     CSVMarketDataTradesManager dataCollection({"../../data/simulation_test_trades_3.csv"});
     auto row = dataCollection.GetTrades();
     MDRow mdRow(row);
     MarketDataSimulationManager marketDataManager({MDRow{row}});
-    // Create Simulation with executionLatency=10, marketDataLatency=5.
     Simulation<10> sim(marketDataManager, 10, 5,
         ExecutedOrderCallback, 
         CanceledOrderCallback,
@@ -125,7 +113,6 @@ TEST(SimulationTests, LimitBuyOrderExecutionTest) {
         MDL1UpdateCallback,
         MDCustomUpdateCallback);
 
-    // Create a buy limit order with limit price 100.
     OrderPtr order = new Order();
     order->Id = 101;
     order->OrderSide = Side::Buy;
@@ -133,13 +120,10 @@ TEST(SimulationTests, LimitBuyOrderExecutionTest) {
     order->Price = 100;
     order->Qty = 50;
     order->Instrument = "TestInstrument";
-    // Submit the order at time 0.
     sim.OnNewOrder(order);
 
-    // Run the simulation.
     sim.Run();
 
-    // Expect that the order is executed during the second MDTrade event.
     ASSERT_EQ(g_executedOrders.size(), 1u);
     EXPECT_EQ(g_executedOrders[0]->Id, 101);
     EXPECT_EQ(g_executedOrders[0]->State, OrderState::Filled);
@@ -147,16 +131,13 @@ TEST(SimulationTests, LimitBuyOrderExecutionTest) {
     delete order;
 }
 
-// Test that a sell limit order is executed only when a later MDTrade event
-// has a price high enough (i.e. order->Price <= mdTrade Price).
 TEST(SimulationTests, LimitSellOrderExecutionTest) {
     g_executedOrders.clear();
     g_canceledOrders.clear();
     g_newOrders.clear();
     g_mdTrades.clear();
     g_mdL1Updates.clear();
-    // Create market data events:
-    // First event: price 95 (not favorable for a sell order at 100, since 100 <= 95 is false).
+
     CSVMarketDataTradesManager dataCollection({"../../data/simulation_test_trades_4.csv"});
     auto row = dataCollection.GetTrades();
     MDRow mdRow(row);
@@ -170,7 +151,6 @@ TEST(SimulationTests, LimitSellOrderExecutionTest) {
         MDL1UpdateCallback,
         MDCustomUpdateCallback);
 
-    // Create a sell limit order with limit price 100.
     OrderPtr order = new Order();
     order->Id = 202;
     order->OrderSide = Side::Sell;
@@ -190,7 +170,6 @@ TEST(SimulationTests, LimitSellOrderExecutionTest) {
     delete order;
 }
 
-// Test that a buy limit order is not executed if no market data event meets its price condition.
 TEST(SimulationTests, LimitBuyOrderNotExecutedTest) {
     g_executedOrders.clear();
     g_canceledOrders.clear();
@@ -198,7 +177,6 @@ TEST(SimulationTests, LimitBuyOrderNotExecutedTest) {
     g_mdTrades.clear();
     g_mdL1Updates.clear();
 
-    // Provide a single MDTrade event with a price that does not favor a buy limit order at 100.
     CSVMarketDataTradesManager dataCollection({"../../data/simulation_test_trades_4.csv"});
     auto row = dataCollection.GetTrades();
     MDRow mdRow(row);
@@ -213,7 +191,6 @@ TEST(SimulationTests, LimitBuyOrderNotExecutedTest) {
         MDL1UpdateCallback,
         MDCustomUpdateCallback);
 
-    // Create a buy limit order with price 100.
     OrderPtr order = new Order();
     order->Id = 303;
     order->OrderSide = Side::Sell;
@@ -225,14 +202,12 @@ TEST(SimulationTests, LimitBuyOrderNotExecutedTest) {
     sim.OnNewOrder(order);
     sim.Run();
 
-    // Expect that no execution occurred.
     EXPECT_TRUE(g_executedOrders.empty());
     EXPECT_EQ(g_newOrders.size(), 1);
 
     delete order;
 }
 
-// Test that a sell limit order is not executed if no market data event meets its price condition.
 TEST(SimulationTests, LimitSellOrderNotExecutedTest) {
     g_executedOrders.clear();
     g_canceledOrders.clear();
@@ -240,7 +215,6 @@ TEST(SimulationTests, LimitSellOrderNotExecutedTest) {
     g_mdTrades.clear();
     g_mdL1Updates.clear();
 
-    // Provide a single MDTrade event with a price that does not favor a sell limit order at 100.
     CSVMarketDataTradesManager dataCollection({"../../data/simulation_test_trades_3.csv"});
     auto row = dataCollection.GetTrades();
     MDRow mdRow(row);
@@ -255,7 +229,6 @@ TEST(SimulationTests, LimitSellOrderNotExecutedTest) {
         MDL1UpdateCallback,
         MDCustomUpdateCallback);
 
-    // Create a sell limit order with price 100.
     OrderPtr order = new Order();
     order->Id = 404;
     order->OrderSide = Side::Buy;
@@ -273,20 +246,16 @@ TEST(SimulationTests, LimitSellOrderNotExecutedTest) {
 }
 
 TEST(SimulationTests, LimitBuyOrderCancelTest) {
-    // Clear previous callback records.
     g_executedOrders.clear();
     g_canceledOrders.clear();
     g_newOrders.clear();
     g_mdTrades.clear();
     g_mdL1Updates.clear();
 
-    // Create market data events:
-    // First MDTrade event: price 105 (not favorable for a buy order at 100).
     CSVMarketDataTradesManager dataCollection({"../../data/simulation_test_trades_5.csv"});
     auto row = dataCollection.GetTrades();
     MDRow mdRow(row);
     MarketDataSimulationManager marketDataManager({MDRow{row}});
-    // Create Simulation with executionLatency=10, marketDataLatency=5.
 
     Simulation<10> sim(marketDataManager, 10, 5,
         ExecutedOrderCallback, 
@@ -297,7 +266,6 @@ TEST(SimulationTests, LimitBuyOrderCancelTest) {
         MDL1UpdateCallback,
         MDCustomUpdateCallback);
 
-    // Create a buy limit order with limit price 100.
     OrderPtr order = new Order();
     order->Id = 101;
     order->OrderSide = Side::Sell;
@@ -306,34 +274,28 @@ TEST(SimulationTests, LimitBuyOrderCancelTest) {
     order->Qty = 50;
     order->Instrument = "TestInstrument";
 
-    // Submit the order at time 0.
     sim.OnNewOrder(order);
 
-    // Run the simulation.
     sim.Run();
 
-    // Expect that the order is executed during the second MDTrade event.
     EXPECT_EQ(g_executedOrders.size(), 0);
 
     delete order;
 }
 
 TEST(SimulationTests, ExecuteOrderMultiinstrumentTest) {
-    // Reset global recording vectors.
     g_executedOrders.clear();
     g_canceledOrders.clear();
     g_newOrders.clear();
     g_mdTrades.clear();
     g_mdL1Updates.clear();
 
-    // Set up a fake market data manager with two MDTrade events.
     CSVMarketDataTradesManager dataCollection_1({"../../data/simulation_test_trades_5.csv"});
     CSVMarketDataTradesManager dataCollection_2({"../../data/simulation_test_trades_6.csv"});
     auto row1 = dataCollection_1.GetTrades();
     auto row2 = dataCollection_2.GetTrades();
     MarketDataSimulationManager marketDataManager({MDRow{row1}, MDRow{row2}});
 
-    // Create a Simulation with execution latency 10 and market data latency 5.
     Simulation<10> sim(marketDataManager, 0, 0,
         ExecutedOrderCallback, 
         CanceledOrderCallback,
@@ -343,7 +305,6 @@ TEST(SimulationTests, ExecuteOrderMultiinstrumentTest) {
         MDL1UpdateCallback,
         MDCustomUpdateCallback);
 
-    // Create a buy limit order (price 105; should match when market trade price is 100).
     OrderPtr order1 = new Order();
     order1->Id = 1;
     order1->OrderSide = Side::Buy;
@@ -364,10 +325,8 @@ TEST(SimulationTests, ExecuteOrderMultiinstrumentTest) {
 
     sim.OnNewOrder(order2);
 
-    // Run the simulation.
     sim.Run();
 
-    // Verify that the executed order callback was invoked.
     ASSERT_EQ(g_executedOrders.size(), 2u);
     EXPECT_EQ(g_executedOrders[0]->Id, 1);
     EXPECT_EQ(g_executedOrders[0]->LastExecPrice, 105);
@@ -380,18 +339,14 @@ TEST(SimulationTests, ExecuteOrderMultiinstrumentTest) {
     EXPECT_EQ(g_executedOrders[1]->Instrument, "TestInstrument2");
     EXPECT_EQ(g_executedOrders[1]->State, OrderState::Filled);
 
-    // Verify that the MDTrade callback was invoked (the first trade’s local time is reached later).
     ASSERT_EQ(g_mdTrades.size(), 9u);
-    // (For example, the first trade’s LocalTimestamp equals 25+5 = 30,
-    // and is processed when the simulation’s current timestamp is 35.)
     EXPECT_GE(g_mdTrades[0]->LocalTimestamp, 15);
 
-    // Clean up.
-    delete order1, order2;
+    delete order1;
+    delete order2;
 }
 
 TEST(SimulationTests, MDCustomUpdatesForwardingTest) {
-    // Reset global recording vectors.
     g_executedOrders.clear();
     g_canceledOrders.clear();
     g_newOrders.clear();
@@ -422,7 +377,6 @@ TEST(SimulationTests, MDCustomUpdatesForwardingTest) {
 }
 
 TEST(SimulationTests, MDCustomMultipleUpdatesForwardingTest) {
-    // Reset global recording vectors.
     g_executedOrders.clear();
     g_canceledOrders.clear();
     g_newOrders.clear();
@@ -472,14 +426,12 @@ TEST(SimulationTests, MDCustomMultipleUpdatesForwardingTest) {
 }
 
 TEST(SimulationTests, ExecuteOrderAgainstL1Test) {
-    // Reset global recording vectors.
     g_executedOrders.clear();
     g_canceledOrders.clear();
     g_newOrders.clear();
     g_mdTrades.clear();
     g_mdL1Updates.clear();
 
-    // Set up a fake market data manager with two MDTrade events.
     std::vector<MDL1Update> updates;
     for(int i = 0; i < 10; ++i)
     {
@@ -495,7 +447,6 @@ TEST(SimulationTests, ExecuteOrderAgainstL1Test) {
 
     MarketDataSimulationManager marketDataManager({MDRow(updates)});
 
-    // Create a Simulation with execution latency 10 and market data latency 5.
     Simulation<10> sim(marketDataManager, 0, 0,
         ExecutedOrderCallback, 
         CanceledOrderCallback,
@@ -505,7 +456,6 @@ TEST(SimulationTests, ExecuteOrderAgainstL1Test) {
         MDL1UpdateCallback,
         MDCustomUpdateCallback);
 
-    // Create a buy limit order (price 105; should match when market trade price is 100).
     OrderPtr order = new Order();
     order->Id = 1;
     order->OrderSide = Side::Buy;
@@ -523,13 +473,11 @@ TEST(SimulationTests, ExecuteOrderAgainstL1Test) {
     order_->Price = 0;
     order_->Qty = 10;
     order_->Instrument = "TestInstrument";
-    // Submit the order.
+
     sim.OnNewOrder(order_);
 
-    // Run the simulation.
     sim.Run();
 
-    // Verify that the executed order callback was invoked.
     ASSERT_EQ(g_executedOrders.size(), 2u);
     EXPECT_EQ(g_executedOrders[0]->Id, 1);
     EXPECT_EQ(g_executedOrders[0]->State, OrderState::Filled);
@@ -539,24 +487,19 @@ TEST(SimulationTests, ExecuteOrderAgainstL1Test) {
     EXPECT_EQ(g_executedOrders[1]->State, OrderState::Filled);
     EXPECT_EQ(g_executedOrders[1]->LastExecPrice, 90);
 
-    // Verify that the MDTrade callback was invoked (the first trade’s local time is reached later).
     ASSERT_EQ(g_mdL1Updates.size(), 10u);
-    // (For example, the first trade’s LocalTimestamp equals 25+5 = 30,
-    // and is processed when the simulation’s current timestamp is 35.)
     EXPECT_GE(g_mdL1Updates[0]->LocalTimestamp, 0);
 
     delete order, order_;
 }
 
 TEST(SimulationTests, LimitOrderExecutedAgainstL1Test) {
-    // Reset global recording vectors.
     g_executedOrders.clear();
     g_canceledOrders.clear();
     g_newOrders.clear();
     g_mdTrades.clear();
     g_mdL1Updates.clear();
 
-    // Set up a fake market data manager with two MDTrade events.
     std::vector<MDL1Update> updates;
     for(int i = 0; i < 10; ++i)
     {
@@ -575,14 +518,11 @@ TEST(SimulationTests, LimitOrderExecutedAgainstL1Test) {
     struct Sim
     {
         int count = 0;
-        // The Simulation instance is now initialized in the constructor.
         Simulation<10> sim;
         OrderPtr order1, order2;
 
-        // Constructor that takes a MarketDataSimulationManager reference.
         Sim(MarketDataSimulationManager &mdManager)
             : sim(mdManager, 0, 0, ExecutedOrderCallback, CanceledOrderCallback, ReplacedOrderCallback, NewOrderCallback, MDTradeCallback,
-                  // Corrected lambda: capture the parameter and call onL1Update.
                   [this](MDL1UpdatePtr update)
                   { this->onL1Update(update); }, MDCustomUpdateCallback)
         {
@@ -600,7 +540,6 @@ TEST(SimulationTests, LimitOrderExecutedAgainstL1Test) {
                 order1->Price = 105;
                 order1->Qty = 10;
                 order1->Instrument = "TestInstrument";
-                // Submit the order.
 
                 order2 = new Order();
                 order2->Id = 2;
@@ -614,14 +553,12 @@ TEST(SimulationTests, LimitOrderExecutedAgainstL1Test) {
             }
         }
 
-        // Expose a Run method that calls the simulation run.
         void Run()
         {
             sim.Run();
         }
     } sim(marketDataManager);
     sim.Run();
-    // Verify that the executed order callback was invoked.
     ASSERT_EQ(g_executedOrders.size(), 2u);
     EXPECT_EQ(g_executedOrders[0]->Id, 1);
     EXPECT_EQ(g_executedOrders[0]->State, OrderState::Filled);
@@ -636,14 +573,12 @@ TEST(SimulationTests, LimitOrderExecutedAgainstL1Test) {
 
 
 TEST(SimulationTests, LimitOrderCanceledL1Test) {
-    // Reset global recording vectors.
     g_executedOrders.clear();
     g_canceledOrders.clear();
     g_newOrders.clear();
     g_mdTrades.clear();
     g_mdL1Updates.clear();
 
-    // Set up a fake market data manager with two MDTrade events.
     std::vector<MDL1Update> updates;
     for(int i = 0; i < 10; ++i)
     {
@@ -662,10 +597,8 @@ TEST(SimulationTests, LimitOrderCanceledL1Test) {
     struct Sim
     {
         int count = 0;
-        // The Simulation instance is now initialized in the constructor.
         Simulation<10> sim;
         OrderPtr order1, order2;
-        // Constructor that takes a MarketDataSimulationManager reference.
         Sim(MarketDataSimulationManager &mdManager)
             : sim(mdManager, 0, 0, ExecutedOrderCallback, CanceledOrderCallback, ReplacedOrderCallback, NewOrderCallback, MDTradeCallback,
                   // Corrected lambda: capture the parameter and call onL1Update.
@@ -705,15 +638,11 @@ TEST(SimulationTests, LimitOrderCanceledL1Test) {
             }
         }
 
-        // Expose a Run method that calls the simulation run.
         void Run()
         {
             sim.Run();
         }
     } sim(marketDataManager);
     sim.Run();
-    // Verify that the executed order callback was invoked.
     ASSERT_EQ(g_executedOrders.size(), 0u);
-
-    //delete g_canceledOrders[1], g_canceledOrders[0];
 }

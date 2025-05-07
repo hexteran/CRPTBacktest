@@ -6,7 +6,7 @@ class PnDQuoter
 public:
     PnDQuoter()
     : orders(500000, Order()),
-      m_simulation(m_md_manager, 0, 0,
+      m_simulation(m_md_manager, 5000l*1000000l, 5000l*1000000l,
                      [this](OrderPtr order) { this->OnOrderFilled(order); },
                      [this](OrderPtr order) { this->OnOrderCanceled(order); },
                      [this](OrderPtr order) { this->OnOrderReplaced(order); },
@@ -17,14 +17,17 @@ public:
                      [this](MDCustomMultipleUpdatePtr update) { this->OnMDCustomMultipleUpdate(update); }
                      )
     {
-
     }
     
     void OnOrderCanceled(OrderPtr order){}
 
     void OnOrderReplaced(OrderPtr order){}
 
-    void OnNewOrder(OrderPtr order){}
+    void OnNewOrder(OrderPtr order)
+    {
+        std::cout << Helpers::TimestampToStr(order->CreateTimestamp) 
+            << ';' << Helpers::TimestampToStr(m_simulation.GetCurrentTimestamp()) << '\n';
+    }
 
     void OnMDCustomUpdate(MDCustomUpdatePtr update){}
 
@@ -48,19 +51,25 @@ public:
 
     void OnMDTrade(MDTradePtr trade)
     {
-        //std::cout << trade->Price << ' ' << m_prev_price << '\n';
-        if (m_prev_price != -1)
+        if (m_avg_price != 0.)
         {
-            if ((trade->Price/m_prev_price) - 1 > 0.05 && !m_sent)
+            if ((trade->Price/m_avg_price) - 1 > 0.025 
+                && !m_sent 
+                && m_prev_trade.EventTimestamp != trade->EventTimestamp)
             {
-                std::cout << trade->Price << ' ' << m_prev_price << '\n';
+                std::cout << trade->Price << ' ' << m_avg_price << '\n';
                 std::cout << "Sending Orders: " << Helpers::TimestampToStr(trade->EventTimestamp) << '\n';
-                SendQuotes(10, trade->Price, 0.1*m_prev_price/10);
+                SendQuotes(10, trade->Price, 0.1*m_avg_price/10);
                 m_sent = true;
             }
-        }  
-        m_prev_price = trade->Price;
-        m_prev_ts = trade->LocalTimestamp;
+        } 
+        else
+        {
+            m_avg_price = trade->Price;
+        }
+        if (m_prev_trade.EventTimestamp != trade->EventTimestamp)
+            m_avg_price = m_alpha*trade->Price + (1-m_alpha)*m_avg_price;
+        m_prev_trade = *trade;
     }
 
     void OnMDCustomMultipleUpdate(MDCustomMultipleUpdatePtr custom_update)
@@ -100,13 +109,15 @@ private:
 
 private:
     MarketDataSimulationManager m_md_manager;
-    Simulation<10000> m_simulation;
+    Simulation<1000000> m_simulation;
     std::vector<Order> orders;
     uint32_t m_order_coursor{0};
 
-    Timestamp m_prev_ts{0};
-    double m_prev_price{-1};
+    MDTrade m_prev_trade;
+
     bool m_sent{false};
+    double m_avg_price{0.};
+    double m_alpha{0.75};
 };
 
 int main()
@@ -114,8 +125,13 @@ int main()
     auto data = ClickhouseMarketDataFetcher<MDTrade>::Fetch(
         "localhost", 19000, 
         "default", "root",
-        "SELECT * FROM binance_futures_usdt_trades WHERE event_timestamp > '2025-02-14 02:04:26' and event_timestamp < '2025-02-14 02:24:26' and symbol == 'THEUSDT'");
-    std::sort(data.begin(), data.end(), [](MDTrade& trade_a, MDTrade& trade_b){return trade_a.EventTimestamp < trade_b.EventTimestamp;});
+        "SELECT * FROM binance_futures_um_trades WHERE event_timestamp > '2025-02-14 02:04:26' and event_timestamp < '2025-02-14 02:24:26' and symbol == 'THEUSDT'");
+    std::sort(data.begin(), data.end(), 
+        [](MDTrade& trade_a, MDTrade& trade_b)
+        {
+            return trade_a.EventTimestamp < trade_b.EventTimestamp 
+                || (trade_a.EventTimestamp == trade_b.EventTimestamp && trade_a.Id < trade_b.Id);
+        });
     std::cout << Helpers::TimestampToStr(data[0].EventTimestamp) << "\nSTARTING ... \n";
     PnDQuoter strategy;
     strategy.Run(data, "RAREUSDT");
