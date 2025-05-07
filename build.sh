@@ -42,13 +42,17 @@ fi
 mkdir build && cd build
 
 cmake .. -DBUILD_TESTS=$BUILD_TESTS \
--DCMAKE_CXX_COMPILER=g++ \
--DCMAKE_BUILD_TYPE=Release \
 -DBUILD_EXAMPLES="$BUILD_EXAMPLES" \
 -DBUILD_PYSTRATEGY="$BUILD_PYSTRATEGY" \
--DBUILD_ALL="$BUILD_ALL"
+-DBUILD_ALL="$BUILD_ALL" \
+-DCMAKE_BUILD_TYPE=Release \
+-DCMAKE_CXX_COMPILER=/usr/bin/clang++
 	
 cmake --build . -j"$CORES"
+
+if [ -d "python" ]; then
+  cp -r ../python .
+fi
 	
-
-
+shopt -s extglob
+rm -rf -- !(bin|python)

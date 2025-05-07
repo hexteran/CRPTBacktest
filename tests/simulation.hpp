@@ -490,7 +490,8 @@ TEST(SimulationTests, ExecuteOrderAgainstL1Test) {
     ASSERT_EQ(g_mdL1Updates.size(), 10u);
     EXPECT_GE(g_mdL1Updates[0]->LocalTimestamp, 0);
 
-    delete order, order_;
+    delete order;
+    delete order_;
 }
 
 TEST(SimulationTests, LimitOrderExecutedAgainstL1Test) {
@@ -568,9 +569,9 @@ TEST(SimulationTests, LimitOrderExecutedAgainstL1Test) {
     EXPECT_EQ(g_executedOrders[1]->State, OrderState::Filled);
     EXPECT_EQ(g_executedOrders[1]->LastExecPrice, 87);
 
-    delete sim.order1, sim.order2;
+    delete sim.order1;
+    delete sim.order2;
 }
-
 
 TEST(SimulationTests, LimitOrderCanceledL1Test) {
     g_executedOrders.clear();

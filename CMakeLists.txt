@@ -38,7 +38,6 @@ set(LD_LIBRARY_PATH /usr/local/lib)
 include(FetchContent)
 
 if (BUILD_EXAMPLES OR BUILD_TESTS)
-  find_package(GTest REQUIRED)
   FetchContent_Declare(
     clickhouse
     GIT_REPOSITORY https://github.com/ClickHouse/clickhouse-cpp.git
@@ -49,7 +48,7 @@ endif()
 
 if (BUILD_EXAMPLES)
   add_executable(PnDQuoter src/examples/pnd_quoter.cpp)
-  target_link_libraries(PnDQuoter PUBLIC gtest clickhouse-cpp-lib)
+  target_link_libraries(PnDQuoter PUBLIC clickhouse-cpp-lib)
 
   #find_library(PAPI_LIBRARY NAMES papi)
   #add_executable(market_making src/examples/market_making.cpp)
@@ -58,6 +57,7 @@ if (BUILD_EXAMPLES)
 endif()
 
 if (BUILD_TESTS)
+find_package(GTest REQUIRED)
   add_executable(Tests tests/tests.cpp)
   target_link_libraries(Tests PUBLIC gtest clickhouse-cpp-lib)
 endif()
