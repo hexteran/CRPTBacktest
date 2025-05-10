@@ -3,9 +3,9 @@ This small backtester is a part of my CRPT pet project. Its goal is to create a 
 <h2>What this repo contains</h2>
   This repo consists of three main parts:
   
-- Simulation Core
-- Examples
-- Python API
+- **Simulation Core**: a tick-size, event-based simulation engine.
+- **Examples**: some python and C++ samples to start with.
+- **Python API**: python interface for fast prototyping.
 
 <h2>Requirements</h2>
 
@@ -35,13 +35,19 @@ Build it with one of the options:
   - <code>-p</code>, <code>--pystrategy</code> Build Python strategy module
   
   - <code>-a</code>, <code>--all</code> Build everything (tests, examples, pystrategy)
-  
-  - <code>-h</code>, <code>--help</code> Show this help message and exit
 
 For example:
 ````
 ./build.sh --pystrategy --tests
 ````
+<h2>Python API</h2>
+This backtester provides a Python interface based on pybind11; you can find it in examples/python.
+To run it correctly, build the solution with the 
+<b>--all</b>  <b>--pystrategy</b> flag.
+
+After the build completes, you’ll find the <code>.so</code> library and a copy of <code>PyStrategy.py</code> in the build/python directory.
+Be sure to include that directory (or any other that contains the aforementioned files) in your <code>PYTHONPATH</code>.
+
   
 
 
