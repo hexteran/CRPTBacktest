@@ -43,7 +43,7 @@ For example:
 <h2>Python API</h2>
 This backtester provides a Python interface based on pybind11; you can find it in examples/python.
 To run it correctly, build the solution with the 
-<b>--all</b>  <b>--pystrategy</b> flag.
+<b>--all</b> or <b>--pystrategy</b> flag.
 
 After the build completes, you’ll find the <code>.so</code> library and a copy of <code>PyStrategy.py</code> in the build/python directory.
 Be sure to include that directory (or any other that contains the aforementioned files) in your <code>PYTHONPATH</code>.
