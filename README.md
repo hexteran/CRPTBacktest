@@ -9,7 +9,7 @@ This small backtester is a part of my CRPT pet project. Its goal is to create a 
 
 <h2>Requirements</h2>
 
-  Before building make sure that you have these two installed:
+  Before building make sure that you have these installed:
   <code>CMake 3.5.0+</code>
   <code>Clang 18.0+</code>
   <code>GTest(optional)</code>
