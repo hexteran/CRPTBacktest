@@ -252,7 +252,7 @@ private:
     PyDataStorage& m_storage;
     bool m_destroyStorage{false};
     MarketDataSimulationManager m_marketDataManager;
-    Simulation<10000> m_simulation;
+    Simulation<1000000> m_simulation;
 };
 
 // Note the module name is "my_module"

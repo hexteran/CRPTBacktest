@@ -107,7 +107,7 @@ public:
             std::vector<OrderPtr> buffer;
             while(!m_ask.empty())
             {
-                if (m_bid.top() != order)
+                if (m_ask.top() != order)
                     buffer.push_back(m_ask.top());
                 m_ask.pop();
             }
