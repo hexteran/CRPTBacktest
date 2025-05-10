@@ -189,11 +189,7 @@ class Strategy:
         self.py_strategy.commit_data()
     
 def ns_to_datetime(ns):
-    # Convert nanoseconds to seconds (as float)
     seconds = ns / 1e9
-    # fromtimestamp creates a datetime in the local timezone
     return datetime.datetime.fromtimestamp(seconds)
-  
-#test_market_order_sell()
 
         

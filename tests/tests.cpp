@@ -1,4 +1,5 @@
 //#pragma once
+
 #include "circular_buffer.hpp"
 #include "order_execution_manager.hpp"
 #include "market_data_simulation_manager.hpp"

@@ -4,6 +4,9 @@
 
 #include "../src/core/market_data_simulation_manager.hpp"
 
+using namespace CRPT::Core;
+using namespace CRPT::Utils;
+
 using BufferPtr = char*;
 
 TEST(MDRow, AllOperations)

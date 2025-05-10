@@ -1,6 +1,8 @@
 //#include "../definitions.h"
 #include "../core/simulation.hpp"
 
+using namespace CRPT::Core;
+
 class MarketMaking
 {
 public:

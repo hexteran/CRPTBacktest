@@ -4,6 +4,9 @@
 
 #include "../src/convenience/clickhouse.hpp"
 
+using namespace CRPT::Core;
+using namespace CRPT::Convenience;
+
 TEST(ClickhouseMarketDataFetcherTest, FetchTrades)
 {
     auto result = ClickhouseMarketDataFetcher<MDTrade>::Fetch("localhost", 19000, "default", "root",

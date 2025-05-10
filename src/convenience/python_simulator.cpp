@@ -5,6 +5,8 @@
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
+using namespace CRPT::Core;
+
 class PyDataStorage
 {
 public:

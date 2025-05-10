@@ -4,6 +4,9 @@
 
 #include "../src/core/simulation.hpp"
 
+using namespace CRPT::Core;
+using namespace CRPT::Utils;
+
 static std::vector<OrderPtr> g_executedOrders;
 static std::vector<OrderPtr> g_canceledOrders;
 static std::vector<OrderPtr> g_replacedOrders;

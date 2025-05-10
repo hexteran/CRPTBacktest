@@ -4,6 +4,8 @@
 
 #include "../src/core/order_execution_manager.hpp"
 
+using namespace CRPT::Core;
+
 TEST(OrderExecutionManagerTests, EmptyMatch)
 {
     OrderExecutionManager manager;

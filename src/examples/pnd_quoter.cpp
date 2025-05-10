@@ -1,6 +1,10 @@
 #include "../convenience/clickhouse.hpp"
 #include "../core/simulation.hpp"
 
+using namespace CRPT::Core;
+using namespace CRPT::Convenience;
+using namespace CRPT::Utils;
+
 class PnDQuoter
 {
 public:

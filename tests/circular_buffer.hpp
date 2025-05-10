@@ -4,6 +4,8 @@
 
 #include "../src/utils/circular_buffer.hpp"
 
+using namespace CRPT::Utils;
+
 TEST(Utils, CircularBufferTest_PushPopBack)
 {
     CircularBuffer<int, 5> buffer;

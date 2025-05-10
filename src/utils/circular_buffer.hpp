@@ -4,99 +4,109 @@
 
 #include <iostream>
 
-constexpr uint64_t CT_MAX_BUFFER_SIZE = 10000;
-
-template<class T, uint64_t n>
-class CircularBuffer
+namespace CRPT::Utils
 {
-    using BufferType = std::conditional_t<(n > CT_MAX_BUFFER_SIZE),
-                                          std::vector<T>,
-                                          std::array<T, n>>;
+    constexpr uint64_t CT_MAX_BUFFER_SIZE = 10000;
 
-public:
-    CircularBuffer(CircularBuffer&&) = delete;
-    CircularBuffer(const CircularBuffer&) = delete;
-
-    CircularBuffer()
+    template <class T, uint64_t n>
+    class CircularBuffer
     {
-        if constexpr (n > CT_MAX_BUFFER_SIZE) 
-        {
-            m_buffer.resize(n);
-        }
-    }
+        using BufferType = std::conditional_t<(n > CT_MAX_BUFFER_SIZE),
+                                              std::vector<T>,
+                                              std::array<T, n>>;
 
-    bool PushBack(const T& element)
-    {
-        if (m_size >= n)
-            return false;
-        else if (m_size == 0)
+    public:
+        CircularBuffer(CircularBuffer &&) = delete;
+        CircularBuffer(const CircularBuffer &) = delete;
+
+        CircularBuffer()
         {
-            m_begin = 0;
-            m_end = -1;
+            if constexpr (n > CT_MAX_BUFFER_SIZE)
+            {
+                m_buffer.resize(n);
+            }
         }
 
-        m_buffer[++m_end] = element;
-        if(m_end >= n) m_end = 0;
-        ++m_size;
-
-        return true;
-    }
-
-    bool PushFront(const T& element)
-    {
-        if (m_size >= n)
-            return false;
-        else if (m_size == 0)
+        bool PushBack(const T &element)
         {
-            m_begin = 1;
-            m_end = 0;
+            if (m_size >= n)
+                return false;
+            else if (m_size == 0)
+            {
+                m_begin = 0;
+                m_end = -1;
+            }
+
+            m_buffer[++m_end] = element;
+            if (m_end >= n)
+                m_end = 0;
+            ++m_size;
+
+            return true;
         }
 
-        m_buffer[--m_begin] = element;
-        if (m_begin < 0) m_begin = n - 1;
-        ++m_size;
+        bool PushFront(const T &element)
+        {
+            if (m_size >= n)
+                return false;
+            else if (m_size == 0)
+            {
+                m_begin = 1;
+                m_end = 0;
+            }
 
-        return true;
-    }
+            m_buffer[--m_begin] = element;
+            if (m_begin < 0)
+                m_begin = n - 1;
+            ++m_size;
 
-    bool PopBack()
-    {
-        if (m_size == 0) return false;
+            return true;
+        }
 
-        --m_end;
-        if (m_end < 0) m_end = n - 1;
-        --m_size;
+        bool PopBack()
+        {
+            if (m_size == 0)
+                return false;
 
-        return true;
-    }
-    
-    bool PopFront()
-    {
-        if (m_size == 0) return false;
+            --m_end;
+            if (m_end < 0)
+                m_end = n - 1;
+            --m_size;
 
-        ++m_begin;
-        if (m_begin >= n) m_begin = 0;
-        --m_size;
+            return true;
+        }
 
-        return true;
-    }
+        bool PopFront()
+        {
+            if (m_size == 0)
+                return false;
 
-    inline T& Front()
-    {
-        return m_buffer[m_begin];
-    }
+            ++m_begin;
+            if (m_begin >= n)
+                m_begin = 0;
+            --m_size;
 
-    inline T& Back()
-    {
-        return m_buffer[m_end];
-    }
+            return true;
+        }
 
-    bool Empty() const
-    {
-        return m_size == 0;
-    }
-private:
-    BufferType m_buffer;
-    int m_begin{0}, m_end{-1};
-    int m_size{0};
-};
+        inline T &Front()
+        {
+            return m_buffer[m_begin];
+        }
+
+        inline T &Back()
+        {
+            return m_buffer[m_end];
+        }
+
+        bool Empty() const
+        {
+            return m_size == 0;
+        }
+
+    private:
+        BufferType m_buffer;
+        int m_begin{0}, m_end{-1};
+        int m_size{0};
+    };
+}
