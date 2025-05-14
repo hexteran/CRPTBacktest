@@ -16,8 +16,6 @@ namespace CRPT::Utils
 
         static std::string TimestampToStr(u_int64_t ts, std::string format = "%Y-%m-%d %H:%M:%S")
         {
-            auto now = std::chrono::system_clock::now();
-            auto onems = std::chrono::microseconds(1);
             u_int64_t epochus = ts;
             time_t epoch = epochus / 1000000000;
             struct tm tms{};
@@ -51,13 +49,7 @@ namespace CRPT::Utils
             return str;
         }
 
-        static double Round(double value, int digits)
-        {
-            auto d = std::pow(10, digits);
-            return std::round(value / 0.0001) * 0.0001;
-        }
-
-        static std::vector<std::vector<std::string>> ReadCSV(const std::string &path, char sep = ',')
+        static std::vector<std::vector<std::string>> ReadCSV(const std::string &path)
         {
             std::vector<std::vector<std::string>> result;
             std::ifstream file{path};

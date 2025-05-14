@@ -9,8 +9,7 @@ class PnDQuoter
 {
 public:
     PnDQuoter()
-    : orders(500000, Order()),
-      m_simulation(m_md_manager, 5000l*1000000l, 5000l*1000000l,
+    :   m_simulation(m_md_manager, 5000l*1000000l, 5000l*1000000l,
                      [this](OrderPtr order) { this->OnOrderFilled(order); },
                      [this](OrderPtr order) { this->OnOrderCanceled(order); },
                      [this](OrderPtr order) { this->OnOrderReplaced(order); },
@@ -19,7 +18,8 @@ public:
                      [this](MDL1UpdatePtr trade) { this->OnL1Update(trade); },
                      [this](MDCustomUpdatePtr update) { this->OnMDCustomUpdate(update); },
                      [this](MDCustomMultipleUpdatePtr update) { this->OnMDCustomMultipleUpdate(update); }
-                     )
+                     ),
+        orders(500000, Order())
     {
     }
     

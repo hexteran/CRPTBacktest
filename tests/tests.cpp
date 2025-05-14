@@ -4,7 +4,7 @@
 #include "order_execution_manager.hpp"
 #include "market_data_simulation_manager.hpp"
 #include "simulation.hpp"
-#include "clickhouse_fetcher.hpp"
+//#include "clickhouse_fetcher.hpp"
 
 int main(int argc, char* argv[])
 {

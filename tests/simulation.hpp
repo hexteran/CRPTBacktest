@@ -358,9 +358,9 @@ TEST(SimulationTests, MDCustomUpdatesForwardingTest) {
 
     std::vector<MDCustomUpdate> updates1(5, MDCustomUpdate());
     std::vector<MDCustomUpdate> updates2(5, MDCustomUpdate());
-    for (int i = 0; i < updates1.size(); ++i)
+    for (size_t i = 0; i < updates1.size(); ++i)
         updates1[i].EventTimestamp = i*3;
-    for (int i = 0; i < updates2.size(); ++i)
+    for (size_t i = 0; i < updates2.size(); ++i)
         updates2[i].EventTimestamp = i * 3 + 1;
 
     MarketDataSimulationManager marketDataManager({MDRow{updates1}, MDRow{updates2}});
@@ -390,14 +390,14 @@ TEST(SimulationTests, MDCustomMultipleUpdatesForwardingTest) {
 
     std::vector<MDCustomMultipleUpdate> updates1(5, MDCustomMultipleUpdate());
     std::vector<MDCustomMultipleUpdate> updates2(5, MDCustomMultipleUpdate());
-    for (int i = 0; i < updates1.size(); ++i)
+    for (size_t i = 0; i < updates1.size(); ++i)
     {
         updates1[i].EventTimestamp = i*3;
         updates1[i].Payload["open"] = i*3;
         updates1[i].Payload["close"] = i*3 + 1;
     }
 
-    for (int i = 0; i < updates2.size(); ++i)
+    for (size_t i = 0; i < updates2.size(); ++i)
     {
         updates2[i].EventTimestamp = i * 3 + 1;
         updates2[i].Payload["open"] = i*3 + 1;

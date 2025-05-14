@@ -30,29 +30,33 @@ namespace CRPT::Core
     public:
         using BufferPtr = char *;
 
-        MDRow(const std::vector<MDTrade> &row, const std::string &rowName = "") : m_typeSize(sizeof(MDTrade)),
+        MDRow(const std::vector<MDTrade> &row, const std::string &rowName = "") : 
                                                                                   m_row{BufferPtr(row.data())},
+                                                                                  m_typeSize(sizeof(MDTrade)),
                                                                                   m_rowSize(row.size()),
                                                                                   m_rowName(rowName)
         {
         }
 
-        MDRow(const std::vector<MDL1Update> &row, const std::string &rowName = "") : m_typeSize(sizeof(MDL1Update)),
+        MDRow(const std::vector<MDL1Update> &row, const std::string &rowName = "") : 
                                                                                      m_row{BufferPtr(row.data())},
+                                                                                     m_typeSize(sizeof(MDL1Update)),
                                                                                      m_rowSize(row.size()),
                                                                                      m_rowName(rowName)
         {
         }
 
-        MDRow(const std::vector<MDCustomUpdate> &row, const std::string &rowName = "") : m_typeSize(sizeof(MDCustomUpdate)),
+        MDRow(const std::vector<MDCustomUpdate> &row, const std::string &rowName = "") : 
                                                                                          m_row{BufferPtr(row.data())},
+                                                                                         m_typeSize(sizeof(MDCustomUpdate)),
                                                                                          m_rowSize(row.size()),
                                                                                          m_rowName(rowName)
         {
         }
 
-        MDRow(const std::vector<MDCustomMultipleUpdate> &row, const std::string &rowName = "") : m_typeSize(sizeof(MDCustomMultipleUpdate)),
+        MDRow(const std::vector<MDCustomMultipleUpdate> &row, const std::string &rowName = "") : 
                                                                                                  m_row{BufferPtr(row.data())},
+                                                                                                 m_typeSize(sizeof(MDCustomMultipleUpdate)),
                                                                                                  m_rowSize(row.size()),
                                                                                                  m_rowName(rowName)
         {
@@ -121,7 +125,7 @@ namespace CRPT::Core
                 {
                     int argmin = -1;
                     Timestamp min = std::numeric_limits<Timestamp>::max();
-                    for (int i = 0; i < counters.size(); ++i)
+                    for (size_t i = 0; i < counters.size(); ++i)
                     {
                         if (counters[i] < m_obj.m_buffers[i].size())
                         {
@@ -153,7 +157,7 @@ namespace CRPT::Core
             {
                 int argmin = -1;
                 Timestamp min = std::numeric_limits<Timestamp>::max();
-                for (int i = 0; i < m_counters.size(); ++i)
+                for (size_t i = 0; i < m_counters.size(); ++i)
                 {
                     if (m_counters[i] < m_obj.m_buffers[i].size())
                     {

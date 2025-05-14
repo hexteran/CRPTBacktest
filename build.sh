@@ -18,7 +18,6 @@ Options:
   -t, --tests           Build tests (requires gtest installed)
   -e, --examples        Build examples
   -p, --pystrategy      Build Python strategy module
-  -a, --all             Build everything (tests, examples, pystrategy)
   -h, --help            Show this help message and exit
 EOF
   exit 0
@@ -29,7 +28,7 @@ while [[ $# -gt 0 ]]; do
     -t|--tests)        BUILD_TESTS="ON";        shift ;;
     -e|--examples)     BUILD_EXAMPLES="ON";     shift ;;
     -p|--pystrategy)   BUILD_PYSTRATEGY="ON";   shift ;;
-    -a|--all)          BUILD_ALL="ON";          shift ;;
+    #-a|--all)          BUILD_ALL="ON";          shift ;;
     -h|--help)      usage                     ;;
     *)              echo "Unknown option: $1" >&2; usage ;;
   esac

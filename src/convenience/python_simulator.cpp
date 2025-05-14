@@ -149,6 +149,8 @@ public:
         std::function<void(MDL1UpdatePtr)> md_l1_update_callback,
         std::function<void(MDCustomUpdatePtr)> md_custom_update_callback,
         std::function<void(MDCustomMultipleUpdatePtr)> md_custom_multiple_update_callback):
+        m_storage(storage),
+        m_destroyStorage(false),
         m_simulation(m_marketDataManager,
             executionLatency, 
             marketDataLatency,
@@ -159,9 +161,7 @@ public:
             md_trade_callback,
             md_l1_update_callback,
             md_custom_update_callback,
-            md_custom_multiple_update_callback),
-        m_storage(storage),
-        m_destroyStorage(false)
+            md_custom_multiple_update_callback)
     {}
 
     PyStrategy(
@@ -175,6 +175,8 @@ public:
         std::function<void(MDL1UpdatePtr)> md_l1_update_callback,
         std::function<void(MDCustomUpdatePtr)> md_custom_update_callback,
         std::function<void(MDCustomMultipleUpdatePtr)> md_custom_multiple_update_callback):
+        m_storage(*(new PyDataStorage())),
+        m_destroyStorage(true),
         m_simulation(m_marketDataManager,
             executionLatency, 
             marketDataLatency,
@@ -185,9 +187,7 @@ public:
             md_trade_callback,
             md_l1_update_callback,
             md_custom_update_callback,
-            md_custom_multiple_update_callback),
-        m_storage(*(new PyDataStorage())),
-        m_destroyStorage(true)
+            md_custom_multiple_update_callback)
     {}
     
     //void AddMDTrades(const std::unordered_map<std::string, std::vector<>>& trades)

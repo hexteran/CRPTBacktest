@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "CRPTBacktest"
+version = "0.1.1a1"
+description = "Tick data backtester"
+readme = "README.md"
+license-files = ["LICENSE"]
+authors = [
+  { name="Anar Faradzhov", email="antaresstarra@gmail.com" },
+]
+requires-python = ">=3.8"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: Apache Software License"
+]
+
+[tool.setuptools.package-data]
+"CRPTBacktest" = ["*.so"]

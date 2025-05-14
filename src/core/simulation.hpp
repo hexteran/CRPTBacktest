@@ -21,18 +21,17 @@ namespace CRPT::Core
                    std::function<void(MDL1UpdatePtr)> md_l1_callback,
                    std::function<void(MDCustomUpdatePtr)> md_custom_update_callback = std::function<void(MDCustomUpdatePtr)>(),
                    std::function<void(MDCustomMultipleUpdatePtr)> md_custom_multiple_update_callback = std::function<void(MDCustomMultipleUpdatePtr)>()) : m_marketDataManager(marketDataManager),
-                                                                                                                                                           m_executionLatency(executionLatency),
-                                                                                                                                                           m_marketDataLatency(marketDataLatency),
+                                                                                                                                                           m_executed_order_callback(executed_order_callback),
                                                                                                                                                            m_canceled_order_callback(canceled_order_callback),
                                                                                                                                                            m_replaced_order_callback(replaced_order_callback),
-                                                                                                                                                           m_executed_order_callback(executed_order_callback),
                                                                                                                                                            m_new_order_callback(new_order_callback),
                                                                                                                                                            m_md_trade_callback(md_trade_callback),
                                                                                                                                                            m_md_l1_callback(md_l1_callback),
                                                                                                                                                            m_md_custom_update_callback(md_custom_update_callback),
-                                                                                                                                                           m_md_custom_multiple_update_callback(md_custom_multiple_update_callback)
-        {
-        }
+                                                                                                                                                           m_md_custom_multiple_update_callback(md_custom_multiple_update_callback),
+                                                                                                                                                           m_executionLatency(executionLatency),
+                                                                                                                                                           m_marketDataLatency(marketDataLatency)
+        {}
 
         void OnNewOrder(OrderPtr order)
         {
