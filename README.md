@@ -24,7 +24,7 @@ cd CRPTBacktest
   ````
 
 ```
-./build.sh [options]
+bash build.sh [options]
 ```
 
 Build it with one of the options:
@@ -33,12 +33,10 @@ Build it with one of the options:
   - <code>-e</code>, <code>--examples</code> Build examples
   
   - <code>-p</code>, <code>--pystrategy</code> Build Python strategy module
-  
-  - <code>-a</code>, <code>--all</code> Build everything (tests, examples, pystrategy)
 
 For example:
 ````
-./build.sh --pystrategy --tests
+bash build.sh --pystrategy --tests
 ````
 
 After the build completes, you’ll find the <code>.so</code> library and a copy of <code>PyStrategy.py</code> in the build/python directory.
